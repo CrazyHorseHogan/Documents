@@ -1181,3 +1181,44 @@ main {
 .map-polygon[data-polygon="PineTrees"] {
     stroke: #455443;
 }
+/* =========================
+   HOUSE INTERIOR
+========================= */
+
+.house-interior {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: #111;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.house-interior.active {
+    display: flex;
+}
+
+.house-interior-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.exit-house-btn {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 20px);
+    left: 20px;
+
+    padding: 12px 18px;
+    border: none;
+    border-radius: 999px;
+
+    background: rgba(20, 75, 58, 0.92);
+    color: white;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
