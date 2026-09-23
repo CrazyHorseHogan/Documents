@@ -26,5 +26,16 @@
   #gardenMap {
     touch-action: manipulation;
   }
+/* Centre the interactive garden on mobile */
+#map-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
 
+#garden-map {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
 }
