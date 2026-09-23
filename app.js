@@ -1,3 +1,4 @@
+// GardenDex phone sync test 🌱
 /* =========================================
    GARDENDEX
    Supabase + Garden Map
