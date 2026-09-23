@@ -1,0 +1,22 @@
+{
+  "name": "GardenDex",
+  "short_name": "GardenDex",
+  "description": "My interactive garden management and plant tracking app",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#2f5d3a",
+  "icons": [
+    {
+      "src": "assets/gardendex-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/gardendex-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
