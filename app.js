@@ -1559,7 +1559,34 @@ function zoomToZone(
     backToGarden.classList.remove(
         "hidden"
     );
+// Show Enter House button only when House is selected
+let enterHouseBtn =
+    document.getElementById("enter-house-btn");
 
+if (polygonName === "House") {
+
+    if (!enterHouseBtn) {
+        enterHouseBtn =
+            document.createElement("button");
+
+        enterHouseBtn.id = "enter-house-btn";
+        enterHouseBtn.className = "enter-house-btn";
+        enterHouseBtn.textContent = "🏠 Enter House";
+
+        document.body.appendChild(enterHouseBtn);
+
+        enterHouseBtn.addEventListener(
+            "click",
+            enterHouse
+        );
+    }
+
+    enterHouseBtn.classList.add("visible");
+
+} else if (enterHouseBtn) {
+
+    enterHouseBtn.classList.remove("visible");
+}
 
     /*
        Fade the other zones.
