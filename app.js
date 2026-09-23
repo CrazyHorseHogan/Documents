@@ -3514,3 +3514,19 @@ document
 
     });
 checkLogin();
+/* =========================
+   HOUSE INTERIOR
+========================= */
+
+const houseInterior = document.getElementById("house-interior");
+const exitHouseBtn = document.getElementById("exit-house-btn");
+
+function enterHouse() {
+    houseInterior.classList.add("active");
+}
+
+function exitHouse() {
+    houseInterior.classList.remove("active");
+}
+
+exitHouseBtn?.addEventListener("click", exitHouse);
