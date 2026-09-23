@@ -39,7 +39,7 @@ const backToGarden =
 
 let plantViewFilter = "current";
 const WHOLE_GARDEN_VIEW =
-    "-350 0 6000 7000";
+    "-350 0 6700 7000";
 const connectionStatus =
     document.getElementById("connection-status");
 
