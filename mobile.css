@@ -1,0 +1,30 @@
+/* ==========================================
+   GardenDex Mobile
+   Phone & Tablet Layout
+   ========================================== */
+
+@media (max-width: 768px) {
+
+  /* Prevent awkward horizontal scrolling */
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Make controls easier to tap */
+  button,
+  input,
+  select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* Garden map remains usable with touch */
+  #gardenMap {
+    touch-action: manipulation;
+  }
+
+}
