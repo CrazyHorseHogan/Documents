@@ -1,0 +1,1184 @@
+/* =========================================
+   GARDENDEX
+   Main Interface Styling
+========================================= */
+
+:root {
+    --forest: #173f32;
+    --forest-light: #2d6048;
+
+    --cream: #f4f0e5;
+    --cream-light: #faf8f2;
+
+    --grass: #bfd49f;
+    --driveway: #d7d3c8;
+    --bark: #98724f;
+
+    --text: #173029;
+    --muted: #718078;
+
+    --shadow:
+        0 15px 45px rgba(20, 50, 35, 0.18);
+}
+
+
+/* =========================================
+   BASIC PAGE
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family:
+        Inter,
+        Arial,
+        sans-serif;
+
+    background: var(--cream);
+
+    color: var(--text);
+
+    overflow: hidden;
+}
+
+
+/* =========================================
+   TOP BAR
+========================================= */
+
+.top-bar {
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding:
+        0 24px;
+
+    background:
+        var(--forest);
+
+    color: white;
+
+    position: relative;
+
+    z-index: 20;
+}
+
+
+.brand h1 {
+    margin: 0;
+
+    font-size: 22px;
+
+    letter-spacing:
+        0.04em;
+}
+
+
+.brand p {
+    margin:
+        3px 0 0;
+
+    font-size: 11px;
+
+    opacity: 0.65;
+}
+
+
+.connection-status {
+    font-size: 12px;
+
+    padding:
+        7px 11px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(255, 255, 255, 0.1);
+}
+
+
+/* =========================================
+   MAP
+========================================= */
+
+main {
+    width: 100%;
+    height:
+        calc(100vh - 72px);
+}
+
+
+#map-container {
+    width: 100%;
+    height: 100%;
+
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        #dfe9d4;
+}
+
+
+#garden-map {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+}
+
+
+/* =========================================
+   SUPABASE MAP POLYGONS
+========================================= */
+
+.map-polygon {
+    stroke:
+        rgba(44, 66, 51, 0.75);
+
+    stroke-width: 2;
+
+    /*
+    Keeps boundary lines visually consistent
+    when the SVG scales.
+    */
+
+    vector-effect:
+        non-scaling-stroke;
+
+    transition:
+        opacity 0.2s ease,
+        filter 0.2s ease;
+}
+
+
+.map-polygon:hover {
+    opacity: 0.85;
+
+    filter:
+        brightness(1.04);
+}
+
+
+/* =========================================
+   PLANT MARKERS
+========================================= */
+
+.plant-marker {
+    cursor: pointer;
+}
+
+
+.plant-marker circle {
+    fill:
+        var(--forest-light);
+
+    stroke:
+        var(--cream-light);
+
+    stroke-width: 4;
+
+    vector-effect:
+        non-scaling-stroke;
+}
+
+
+.plant-marker:hover circle {
+    fill:
+        var(--forest);
+}
+
+
+/* =========================================
+   PLANT PANEL
+========================================= */
+
+#plant-panel {
+    position: fixed;
+
+    top: 92px;
+    right: 20px;
+
+    width: 360px;
+
+    max-height:
+        calc(100vh - 112px);
+
+    overflow-y: auto;
+
+    padding: 24px;
+
+    border-radius: 22px;
+
+    background:
+        rgba(250, 248, 242, 0.97);
+
+    box-shadow:
+        var(--shadow);
+
+    border:
+        1px solid
+        rgba(23, 63, 50, 0.1);
+
+    z-index: 30;
+}
+
+
+#plant-panel.hidden {
+    display: none;
+}
+
+
+/* CLOSE */
+
+#close-panel {
+    position: absolute;
+
+    right: 15px;
+    top: 15px;
+
+    width: 34px;
+    height: 34px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background:
+        #e4e5db;
+
+    color:
+        var(--forest);
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   GARDENDEX PLANT INFO
+========================================= */
+
+.dex-number {
+    margin: 0;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing:
+        0.16em;
+
+    color:
+        var(--muted);
+}
+
+
+#plant-name {
+    margin:
+        7px 45px 0 0;
+
+    font-size: 26px;
+
+    line-height: 1.1;
+}
+
+
+.plant-species {
+    margin:
+        5px 0 15px;
+
+    font-size: 13px;
+
+    font-style: italic;
+
+    color:
+        var(--muted);
+}
+
+
+/* =========================================
+   STATUS CHIPS
+========================================= */
+
+.plant-status {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin:
+        15px 0;
+}
+
+
+.plant-status span {
+    padding:
+        6px 9px;
+
+    border-radius: 999px;
+
+    background:
+        #dce7d8;
+
+    color:
+        var(--forest);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    text-transform:
+        uppercase;
+}
+
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
+.plant-actions {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 8px;
+
+    margin:
+        18px 0;
+}
+
+
+.plant-actions button {
+    min-height: 44px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background:
+        var(--forest);
+
+    color: white;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease;
+}
+
+
+.plant-actions button:hover {
+    background:
+        var(--forest-light);
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* =========================================
+   PLANT SECTIONS
+========================================= */
+
+.plant-section {
+    padding-top: 15px;
+
+    margin-top: 15px;
+
+    border-top:
+        1px solid #dedbd1;
+}
+
+
+.plant-section h3 {
+    margin:
+        0 0 8px;
+
+    font-size: 10px;
+
+    letter-spacing:
+        0.12em;
+
+    text-transform:
+        uppercase;
+
+    color:
+        var(--muted);
+}
+
+
+.plant-section p {
+    margin: 0;
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    background:
+        white;
+
+    border:
+        1px solid #e2ded4;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   QUICK ADD BUTTON
+========================================= */
+
+#quick-add {
+    position: fixed;
+
+    right: 24px;
+    bottom: 24px;
+
+    width: 54px;
+    height: 54px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background:
+        var(--forest);
+
+    color: white;
+
+    font-size: 28px;
+
+    box-shadow:
+        0 8px 25px
+        rgba(23, 63, 50, 0.35);
+
+    cursor: pointer;
+
+    z-index: 25;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+#quick-add:hover {
+    transform:
+        scale(1.06);
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media
+(max-width: 700px) {
+
+    .top-bar {
+        height: 64px;
+
+        padding:
+            0 15px;
+    }
+
+
+    .brand h1 {
+        font-size: 19px;
+    }
+
+
+    .brand p {
+        display: none;
+    }
+
+
+    main {
+        height:
+            calc(100vh - 64px);
+    }
+
+
+    #plant-panel {
+        top: auto;
+
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+
+        width: auto;
+
+        max-height: 70vh;
+
+        border-radius: 22px;
+    }
+
+
+    #quick-add {
+        right: 16px;
+        bottom: 16px;
+
+        width: 50px;
+        height: 50px;
+    }
+
+}
+/* =========================================
+   GARDENDEX LOGIN
+========================================= */
+
+#login-screen {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            #173f32,
+            #315f49
+        );
+
+    z-index: 1000;
+}
+
+
+#login-screen.hidden {
+    display: none;
+}
+
+
+.login-card {
+    width: min(390px, calc(100% - 32px));
+
+    padding: 38px;
+
+    border-radius: 26px;
+
+    background: #faf8f2;
+
+    box-shadow:
+        0 30px 80px
+        rgba(0, 0, 0, 0.28);
+}
+
+
+.login-icon {
+    font-size: 34px;
+
+    margin-bottom: 12px;
+}
+
+
+.login-card h1 {
+    margin: 0;
+
+    color: #173f32;
+
+    font-size: 30px;
+}
+
+
+.login-subtitle {
+    margin:
+        5px 0 28px;
+
+    color: #718078;
+}
+
+
+.login-card label {
+    display: block;
+
+    margin:
+        14px 0 6px;
+
+    color: #173f32;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+
+.login-card input {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border:
+        1px solid #d4d8cf;
+
+    border-radius: 11px;
+
+    background: white;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+
+.login-card input:focus {
+    border-color: #315f49;
+}
+
+
+.login-card button {
+    width: 100%;
+
+    margin-top: 20px;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #173f32;
+
+    color: white;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.login-message {
+    min-height: 18px;
+
+    margin:
+        12px 0 0;
+
+    text-align: center;
+
+    color: #a04444;
+
+    font-size: 12px;
+}
+/* =========================================
+   MAP NAVIGATION
+========================================= */
+
+.map-navigation {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.location-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.location-label {
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    opacity: 0.55;
+}
+
+#current-zone {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+}
+
+.back-button {
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+
+    color: white;
+
+    padding: 8px 12px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 11px;
+}
+
+.back-button:hover {
+    background: rgba(255,255,255,0.16);
+}
+
+.back-button.hidden {
+    display: none;
+}
+
+
+/* Clickable zones */
+
+.map-polygon {
+    cursor: pointer;
+}
+
+.map-polygon.zone-selected {
+    opacity: 1;
+}
+
+.map-polygon.zone-muted {
+    opacity: 0.18;
+}
+
+
+/* Mobile */
+
+@media (max-width: 700px) {
+
+    .connection-status {
+        display: none;
+    }
+
+    .map-navigation {
+        gap: 8px;
+    }
+
+    .back-button {
+        padding: 7px 9px;
+    }
+
+    #current-zone {
+        font-size: 11px;
+    }
+
+}
+/* =========================================
+   ADD PLANT — PLACEMENT MODE
+========================================= */
+
+.placement-banner {
+    position: fixed;
+    top: 88px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    gap: 22px;
+
+    padding: 12px 16px;
+
+    background: var(--forest);
+    color: white;
+
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+
+    z-index: 50;
+}
+
+.placement-banner.hidden {
+    display: none;
+}
+
+.placement-banner div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.placement-banner strong {
+    font-size: 13px;
+}
+
+.placement-banner span {
+    font-size: 10px;
+    opacity: 0.75;
+}
+
+.placement-banner button {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.1);
+
+    color: white;
+
+    padding: 7px 10px;
+    border-radius: 9px;
+
+    cursor: pointer;
+}
+
+
+/* Placement cursor */
+
+#garden-map.placement-mode {
+    cursor: crosshair;
+}
+
+
+/* =========================================
+   ADD PLANT PANEL
+========================================= */
+
+#add-plant-panel {
+    position: fixed;
+
+    top: 92px;
+    right: 20px;
+
+    width: 370px;
+    max-height: calc(100vh - 112px);
+
+    overflow-y: auto;
+
+    padding: 24px;
+
+    background: rgba(250, 248, 242, 0.98);
+
+    border:
+        1px solid
+        rgba(23, 63, 50, 0.1);
+
+    border-radius: 22px;
+
+    box-shadow: var(--shadow);
+
+    z-index: 45;
+}
+
+#add-plant-panel.hidden {
+    display: none;
+}
+
+#add-plant-panel h2 {
+    margin: 7px 45px 18px 0;
+    font-size: 26px;
+}
+
+
+/* Close button */
+
+.panel-close {
+    position: absolute;
+
+    top: 15px;
+    right: 15px;
+
+    width: 34px;
+    height: 34px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #e4e5db;
+    color: var(--forest);
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   COORDINATE PREVIEW
+========================================= */
+
+.coordinate-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    margin-bottom: 18px;
+    padding: 12px 14px;
+
+    background: #e5ecdf;
+
+    border-radius: 12px;
+}
+
+.coordinate-card span {
+    font-size: 10px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    color: var(--muted);
+}
+
+.coordinate-card strong {
+    font-size: 13px;
+    color: var(--forest);
+}
+
+
+/* =========================================
+   ADD PLANT FORM
+========================================= */
+
+#add-plant-form label {
+    display: block;
+
+    margin: 13px 0 6px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    color: var(--forest);
+}
+
+#add-plant-form input,
+#add-plant-form select,
+#add-plant-form textarea {
+    width: 100%;
+
+    padding: 11px 12px;
+
+    border: 1px solid #d4d8cf;
+    border-radius: 10px;
+
+    background: white;
+    color: var(--text);
+
+    font: inherit;
+    font-size: 13px;
+
+    outline: none;
+}
+
+#add-plant-form textarea {
+    resize: vertical;
+}
+
+#add-plant-form input:focus,
+#add-plant-form select:focus,
+#add-plant-form textarea:focus {
+    border-color: var(--forest-light);
+}
+
+
+/* Buttons */
+
+.form-actions {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
+
+    margin-top: 20px;
+}
+
+.form-actions button {
+    min-height: 44px;
+
+    border: none;
+    border-radius: 11px;
+
+    background: var(--forest);
+    color: white;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.form-actions .secondary-button {
+    background: #e2e7dc;
+    color: var(--forest);
+}
+
+.form-message {
+    min-height: 18px;
+
+    margin: 10px 0 0;
+
+    font-size: 11px;
+
+    text-align: center;
+    color: var(--muted);
+}
+
+
+/* =========================================
+   MOBILE ADD PLANT
+========================================= */
+
+@media (max-width: 700px) {
+
+    .placement-banner {
+        top: 76px;
+
+        width: calc(100% - 24px);
+
+        justify-content: space-between;
+    }
+
+    #add-plant-panel {
+        top: auto;
+
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+
+        width: auto;
+        max-height: 78vh;
+
+        border-radius: 22px;
+    }
+
+}
+/* ================================
+   PLANT VIEW FILTER
+================================ */
+
+.plant-view-filter {
+    position: absolute;
+    top: 95px;
+    left: 24px;
+    z-index: 20;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 8px 10px 8px 14px;
+
+    background: rgba(255, 253, 246, 0.94);
+    border: 1px solid rgba(43, 77, 57, 0.14);
+    border-radius: 14px;
+
+    box-shadow: 0 5px 18px rgba(30, 55, 40, 0.12);
+    backdrop-filter: blur(8px);
+}
+
+.filter-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #68776c;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+
+    background: #e8ece4;
+    border-radius: 10px;
+}
+
+.plant-filter-button {
+    border: 0;
+    background: transparent;
+    color: #526057;
+
+    padding: 6px 11px;
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: 0.18s ease;
+}
+
+.plant-filter-button:hover {
+    background: rgba(255, 255, 255, 0.65);
+}
+
+.plant-filter-button.active {
+    background: #284b36;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(40, 75, 54, 0.18);
+}
+
+@media (max-width: 700px) {
+    .plant-view-filter {
+        top: 82px;
+        left: 12px;
+        gap: 7px;
+        padding: 6px 7px 6px 10px;
+    }
+
+    .filter-label {
+        display: none;
+    }
+
+    .plant-filter-button {
+        padding: 6px 9px;
+    }
+}
+/* =========================================
+   GARDENDEX INDIE MAP — PASS 1
+========================================= */
+
+#garden-map {
+    background:
+        linear-gradient(
+            135deg,
+            #eee9da 0%,
+            #e4ead8 100%
+        );
+}
+
+.map-polygon {
+    stroke: none;
+    stroke-width: 0;
+    vector-effect: non-scaling-stroke;
+
+    transition:
+        opacity 0.25s ease,
+        filter 0.25s ease;
+}
+
+.map-polygon[data-polygon="House"] {
+    stroke: #8f8573;
+    stroke-width: 4;
+
+    filter:
+        drop-shadow(
+            12px
+            16px
+            10px
+            rgba(44, 52, 41, 0.22)
+        );
+}
+}
+
+.map-polygon[data-polygon="Driveway"] {
+    stroke: #aaa18e;
+    stroke-width: 3;
+
+    filter:
+        drop-shadow(
+            4px
+            6px
+            5px
+            rgba(63, 66, 53, 0.12)
+        );
+}
+
+.map-polygon[data-polygon="Bark"] {
+    stroke: #70513a;
+}
+
+.map-polygon[data-polygon="PineTrees"] {
+    stroke: #455443;
+}

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GardenDex</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+
+<body>
+
+    <!-- =====================================
+         GARDENDEX LOGIN
+    ====================================== -->
+
+    <div id="login-screen">
+
+        <div class="login-card">
+
+            <div class="login-icon">
+                🌿
+            </div>
+
+            <h1>GardenDex</h1>
+
+            <p class="login-subtitle">
+                Your living garden
+            </p>
+
+            <form id="login-form">
+
+                <label for="login-email">
+                    Email
+                </label>
+
+                <input
+                    id="login-email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="login-password">
+                    Password
+                </label>
+
+                <input
+                    id="login-password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit">
+                    Sign In
+                </button>
+
+            </form>
+
+            <p
+                id="login-message"
+                class="login-message">
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+     TOP BAR
+====================================== -->
+
+<header class="top-bar">
+
+    <div class="brand">
+
+        <h1>GardenDex</h1>
+
+        <p>
+            Hogan Garden Digital Twin
+        </p>
+
+    </div>
+
+    <div class="map-navigation">
+
+        <button
+            id="back-to-garden"
+            class="back-button hidden">
+            ← Whole Garden
+        </button>
+
+        <div class="location-display">
+            <span class="location-label">VIEWING</span>
+            <strong id="current-zone">Whole Garden</strong>
+        </div>
+
+        <div
+            id="connection-status"
+            class="connection-status">
+            Connecting...
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================
+     MAP PLANT FILTER
+====================================== -->
+
+<div class="plant-view-filter">
+
+    <span class="filter-label">
+        PLANT VIEW
+    </span>
+
+    <div class="filter-buttons">
+
+        <button
+            class="plant-filter-button"
+            data-filter="all">
+            All
+        </button>
+
+        <button
+            class="plant-filter-button active"
+            data-filter="current">
+            Current
+        </button>
+
+        <button
+            class="plant-filter-button"
+            data-filter="future">
+            Future
+        </button>
+
+    </div>
+
+</div>
+
+
+    <!-- =====================================
+         MAIN MAP
+    ====================================== -->
+
+    <main>
+
+        <section id="map-container">
+
+            <svg
+                id="garden-map"
+                viewBox="0 0 6000 7000"
+                preserveAspectRatio="xMidYMid meet">
+            </svg>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================
+         PLANT PANEL
+    ====================================== -->
+
+    <aside
+        id="plant-panel"
+        class="hidden">
+
+        <button
+            id="close-panel"
+            aria-label="Close plant panel">
+            ×
+        </button>
+
+        <p class="dex-number">
+            GARDENDEX
+        </p>
+
+        <h2 id="plant-name">
+            Plant
+        </h2>
+
+        <p
+            id="plant-species"
+            class="plant-species">
+        </p>
+
+
+        <div class="plant-status">
+
+            <span id="plant-health">
+                Healthy
+            </span>
+
+            <span id="plant-zone">
+                Garden
+            </span>
+
+        </div>
+
+
+        <div class="plant-actions">
+
+            <button id="add-note">
+                + Note
+            </button>
+
+            <button id="add-job">
+                + Job
+            </button>
+
+            <button id="log-work">
+                ✓ Work
+            </button>
+
+            <button id="add-photo">
+                📷 Photo
+            </button>
+
+        </div>
+
+
+        <section class="plant-section">
+
+            <h3>Next Job</h3>
+
+            <div id="plant-jobs">
+                <p>No jobs scheduled.</p>
+            </div>
+
+        </section>
+
+
+        <section class="plant-section">
+
+            <h3>Recent Notes</h3>
+
+            <div id="plant-notes">
+                <p>No notes yet.</p>
+            </div>
+
+        </section>
+
+
+        <section class="plant-section">
+
+            <h3>History</h3>
+
+            <div id="plant-history">
+                <p>No history yet.</p>
+            </div>
+
+        </section>
+
+    </aside>
+
+
+<!-- =====================================
+     ADD PLANT
+====================================== -->
+
+<div id="placement-banner" class="placement-banner hidden">
+    <div>
+        <strong>🌱 Place Plant</strong>
+        <span>Tap the plant's exact location on the map</span>
+    </div>
+
+    <button id="cancel-placement">
+        Cancel
+    </button>
+</div>
+
+
+<aside id="add-plant-panel" class="hidden">
+
+    <button
+        id="close-add-plant"
+        class="panel-close"
+        aria-label="Close add plant form">
+        ×
+    </button>
+
+    <p class="dex-number">
+        NEW GARDENDEX ENTRY
+    </p>
+
+    <h2>Add Plant</h2>
+
+    <div class="coordinate-card">
+        <span id="new-plant-zone">
+            Zone
+        </span>
+
+        <strong id="new-plant-coordinates">
+            Select a location
+        </strong>
+    </div>
+
+    <form id="add-plant-form">
+<label for="new-status">
+    Status *
+</label>
+
+<select id="new-status" required>
+    <option value="Existing">🌳 Existing plant</option>
+    <option value="Planned">🌱 Future / planned plant</option>
+</select>
+
+<label for="new-record-type">
+    Entry type *
+</label>
+
+<select id="new-record-type" required>
+    <option value="Individual">Individual plant</option>
+    <option value="Planting Group">Planting group</option>
+</select>
+
+<div id="quantity-field" class="hidden">
+
+    <label for="new-quantity">
+        Quantity *
+    </label>
+
+    <input
+    id="new-quantity"
+    type="number"
+    min="2"
+    value="2"
+    disabled
+>
+
+</div>
+<div id="layout-field" class="hidden">
+
+    <label for="new-layout-type">
+        Layout *
+    </label>
+
+    <select id="new-layout-type">
+        <option value="Point">
+            ● Compact group
+        </option>
+
+        <option value="Row">
+            ━ Row / line
+        </option>
+    </select>
+
+</div>        
+<label for="new-common-name">
+            Common name *
+        </label>
+
+        <input
+            id="new-common-name"
+            type="text"
+            placeholder="e.g. Norway Maple"
+            required
+        >
+
+        <label for="new-species">
+            Species
+        </label>
+
+        <input
+            id="new-species"
+            type="text"
+            placeholder="e.g. Acer platanoides"
+        >
+
+        <label for="new-plant-type">
+            Plant type *
+        </label>
+
+        <select id="new-plant-type" required>
+            <option value="Tree">🌳 Tree</option>
+            <option value="Shrub">🌿 Shrub</option>
+            <option value="Conifer">🌲 Conifer</option>
+            <option value="Flower">🌸 Flower</option>
+            <option value="Hedge">🌿 Hedge</option>
+            <option value="Fruit Tree">🍎 Fruit Tree</option>
+            <option value="Climber">🌱 Climber</option>
+            <option value="Grass">🌾 Grass</option>
+            <option value="Crop">🥬 Crop</option>
+        </select>
+
+        <label for="new-condition">
+            Condition
+        </label>
+
+        <select id="new-condition">
+            <option value="Healthy">Healthy</option>
+            <option value="Good">Good</option>
+            <option value="Monitor">Monitor</option>
+            <option value="Poor">Poor</option>
+            <option value="Serious">Serious</option>
+            <option value="Unknown">Unknown</option>
+        </select>
+
+        <label for="new-notes">
+            Notes
+        </label>
+
+        <textarea
+            id="new-notes"
+            rows="4"
+            placeholder="Anything useful about this plant..."></textarea>
+
+        <div class="form-actions">
+
+            <button
+                id="reposition-plant"
+                type="button"
+                class="secondary-button">
+                📍 Reposition
+            </button>
+
+            <button
+                id="save-plant"
+                type="submit">
+                Save Plant
+            </button>
+
+        </div>
+
+        <p
+            id="plant-form-message"
+            class="form-message">
+        </p>
+
+    </form>
+
+</aside>
+
+
+<!-- =====================================
+     QUICK ADD
+====================================== -->
+
+<button
+    id="quick-add"
+    aria-label="Add plant"
+    title="Add Plant">
+    +
+</button>
+
+    <!-- =====================================
+         JAVASCRIPT
+         MUST REMAIN LAST
+    ====================================== -->
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

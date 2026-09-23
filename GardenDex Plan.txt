@@ -1,0 +1,191 @@
+🌿 GardenDex Master Job Board
+
+🗺️ MAP & GEOMETRY — core foundation
+✅ Import exact garden survey coordinates into Supabase
+✅ Render Full_Zones as SVG polygons
+✅ Preserve exact X/Y geometry and Y-axis conversion
+✅ Whole Garden ↔ individual zone navigation
+✅ Big Garden, Driveway, House, Children Garden, Bark, Pine Trees mapped
+⬜ Add Road Frontage once exact coordinates are supplied
+⬜ Add remaining real structures/boundaries: walls, fences, gates, paths, etc.
+⬜ Replace hard-coded 0 0 6000 7000 framing with automatic bounds from real geometry
+⬜ Optional coordinate/grid/debug layer
+⬜ Better pan / zoom / touch navigation
+🔒 Rule: styling must never move survey geometry
+
+🌱 PLANT SYSTEM — partially built
+✅ Add plants by clicking exact map position
+✅ Existing / Planned status
+✅ Individual / Planting Group
+✅ Quantity control
+✅ Point / Row layout selector
+✅ Two-click row placement
+✅ Live row preview — e.g. our 12 European Beeches 🌳🌳🌳
+⏸️ Finish row persistence: save record_type, quantity, layout_type, end_x_cm, end_y_cm to Supabase
+⏸️ Teach saved-plant renderer to reconstruct rows after refresh
+⬜ Update the existing European Beech record into the real row
+⬜ Plant editing
+⬜ Reposition existing plants
+⬜ Remove/archive plants safely
+⬜ Area planting/flower beds
+⬜ Curved/custom-path planting for hedges etc.
+⬜ Promote one plant from a group into an individually tracked specimen
+⬜ Optional mature spread / height / life-stage data
+
+🎨 INDIE-GAME VISUAL SYSTEM — current fun project
+✅ Establish visual direction: cosy indie game × botanical journal
+✅ First terrain material experiment
+✅ Lawn / gravel / bark / woodland materials
+🔄 Remove technical polygon outlines
+🔄 Upgrade terrain from repeating SVG patterns to proper illustrated materials
+🔄 Create actual illustrated House asset
+⬜ Clip/anchor House artwork to its exact surveyed footprint
+⬜ Illustrated gravel driveway
+⬜ Better irregular bark-chip artwork
+⬜ Stone walls / pillars / gates as illustrated structural assets
+⬜ Subtle depth/shadows without altering boundaries
+⬜ Illustrated zone labels
+⬜ Compass / scale
+⬜ Use empty space beside map for useful journal-style information rather than fake scenery
+🔒 Rule: absolutely NO decorative fake plants. The garden becomes beautiful only as real plants are added.
+
+🌳 ILLUSTRATED PLANT “STAMP” LIBRARY
+⬜ Replace emoji/circle markers with illustrated botanical sprites
+⬜ Create consistent GardenDex art style
+⬜ European Beech first
+⬜ Norway Maple
+⬜ European Ash
+⬜ Silver Birch
+⬜ Holly
+⬜ Pines/conifers
+⬜ Hydrangea
+⬜ Climbing rose
+⬜ Continue library automatically as new species are added
+⬜ Generic fallback assets for species without custom artwork yet
+⬜ Scale illustrations according to real/mapped canopy size eventually
+⬜ Selected-plant highlight without ugly marker circles
+
+🍂 SEASONS & ANIMATION
+⬜ Spring plant sprites
+⬜ Summer sprites
+⬜ Autumn sprites
+⬜ Winter sprites
+⬜ Automatically choose seasonal appearance from date
+⬜ Season/time-travel slider
+⬜ Gentle tree sway
+⬜ Different movement for trees / shrubs / grasses / flowers
+⬜ Slightly different animation timing per specimen so everything doesn't move together
+⬜ Weather-controlled wind strength
+⬜ Planned plants semi-transparent/ghosted
+⬜ Potential future-growth visualisation
+
+🏡 HOUSE & INDOOR GARDEN
+🔄 Make House an illustrated indie-game structure rather than a flat polygon
+⬜ Use real-house reference photos for artwork
+⬜ House remains positioned by exact House geometry
+⬜ Clicking House opens House View
+⬜ Top-down room layout
+⬜ Windowsills
+⬜ Houseplants
+⬜ Propagation shelves
+⬜ Seed trays
+⬜ Indoor → outdoor “Plant Out” workflow
+⬜ House maintenance locations/rooms
+⬜ Animated window glow
+⬜ Exterior lights
+⬜ Chimney/smoke if applicable
+🌦️ LIVE WORLD SYSTEM
+⬜ Real-time clock
+⬜ Morning lighting
+⬜ Day lighting
+⬜ Golden-hour/evening lighting
+⬜ Night mode
+⬜ House windows/lights respond to time
+⬜ LIVE mode
+⬜ Manual time-of-day slider
+⬜ Current Galway weather integration
+⬜ Rain animation
+⬜ Wet driveway effect
+⬜ Wind controls tree sway
+⬜ Frost/snow possibilities
+⬜ Combine date + season + weather + time
+
+🌱 GREENHOUSE / POLYTUNNEL
+⬜ Map exact location/footprint when ready
+⬜ Click structure → dedicated growing view
+⬜ Beds
+⬜ Shelves
+⬜ Seed trays
+⬜ Pots
+⬜ Crops
+⬜ Propagation tracking
+⬜ Plant-out dates
+⬜ Move plants between House → Greenhouse → Garden while retaining their history
+📋 JOBS & MAINTENANCE
+⬜ Create jobs table
+⬜ Job targets: plant / zone / house area / whole property
+⬜ Assign jobs to Gerard or Madam
+⬜ Due dates
+⬜ Priority
+⬜ Status
+⬜ Notes
+⬜ Job badges directly on map objects
+⬜ Today
+⬜ This Week
+⬜ Month
+⬜ Completing a job automatically creates maintenance history
+⬜ Recurring jobs
+⬜ Watering reminders
+⬜ Pruning reminders
+⬜ Seasonal jobs
+⬜ Weather-aware recommendations
+⬜ Potential cheeky UI name: Madam's Orders 😂
+
+🦊 WILDLIFE & ECOLOGY
+⬜ Wildlife sightings layer
+⬜ Bats
+⬜ Foxes
+⬜ Birds
+⬜ Pollinators
+⬜ Timestamp sightings
+⬜ Optional map location
+⬜ Photos/notes
+⬜ Wildlife-friendly habitat records
+⬜ Biodiversity history over time
+
+📸 PHOTOS, NOTES & HISTORY
+⬜ Add photo to plant
+⬜ Add photo to zone/property
+⬜ Mobile camera upload
+⬜ Plant notes
+⬜ Maintenance log
+⬜ Growth/history timeline
+⬜ Before/after photos
+⬜ Plant health history
+⬜ Property maintenance history
+
+📱 UI / PRODUCT
+✅ Map remains the main screen
+✅ Plant profile panel
+✅ Current/Future filters
+⬜ Proper illustrated plant profile image
+⬜ Layers menu
+⬜ Map / Jobs / Plants / Calendar / History navigation
+⬜ Universal + for Plant / Job / Note / Wildlife / Issue / Photo
+⬜ Better use of desktop negative space
+⬜ Mobile bottom sheets
+⬜ Phone/tablet optimisation
+⬜ PWA / Add to Home Screen
+⬜ Deploy to Vercel
+⬜ Keep GitHub project clean/versioned
+
+🔐 USERS & BACKEND
+✅ Supabase authentication
+✅ Basic RLS
+⬜ gardens / property ownership model
+⬜ garden_members
+⬜ Gerard account
+⬜ Madam account
+⬜ Proper membership-based RLS before opening access to second user
+⬜ Shared live updates between phones/computers
+⬜ Backup/export garden data
