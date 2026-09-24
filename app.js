@@ -173,6 +173,7 @@ function drawGarden(rows) {
     gardenMap.innerHTML = "";
 addGardenMaterials();
 createMapLayers();
+drawRoad();
     /*
        Draw every polygon Supabase returned.
     */
@@ -196,7 +197,9 @@ drawAllZoneBoundaries(polygons);
 }
 
 function createMapLayers() {
-    const svgNS = "http://www.w3.org/2000/svg";
+
+    const svgNS =
+        "http://www.w3.org/2000/svg";
 
     const layers = [
         "terrain-layer",
@@ -207,10 +210,99 @@ function createMapLayers() {
     ];
 
     layers.forEach(id => {
-        const layer = document.createElementNS(svgNS, "g");
-        layer.setAttribute("id", id);
-        gardenMap.appendChild(layer);
+
+        const layer =
+            document.createElementNS(
+                svgNS,
+                "g"
+            );
+
+        layer.setAttribute(
+            "id",
+            id
+        );
+
+        gardenMap.appendChild(
+            layer
+        );
+
     });
+}
+
+
+/* =========================================
+   GARDENDEX ROAD
+   REAL COORDINATES:
+   X = -100 → 6500
+   Y = 0 → -200
+========================================= */
+
+function drawRoad() {
+
+    const svgNS =
+        "http://www.w3.org/2000/svg";
+
+    const SVG_HEIGHT = 7000;
+
+    const terrainLayer =
+        gardenMap.querySelector(
+            "#terrain-layer"
+        );
+
+    if (!terrainLayer) {
+        return;
+    }
+
+    const road =
+        document.createElementNS(
+            svgNS,
+            "image"
+        );
+
+    road.setAttribute(
+        "x",
+        -100
+    );
+
+    /*
+       Real Y = 0 corresponds to
+       SVG Y = 7000.
+
+       Negative real-world Y extends
+       downward on the SVG.
+    */
+
+    road.setAttribute(
+        "y",
+        SVG_HEIGHT
+    );
+
+    road.setAttribute(
+        "width",
+        6600
+    );
+
+    road.setAttribute(
+        "height",
+        200
+    );
+
+    road.setAttribute(
+        "href",
+        "assets/terrain/Road.PNG"
+    );
+
+    road.setAttribute(
+        "preserveAspectRatio",
+        "none"
+    );
+
+    road.style.pointerEvents =
+        "none";
+
+    terrainLayer.appendChild(
+        road
+    );
 }
 /* =========================================
    GARDENDEX TEMPORARY ALL BOUNDARIES
