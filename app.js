@@ -237,6 +237,13 @@ function createMapLayers() {
    Y = 0 → -200
 ========================================= */
 
+/* =========================================
+   GARDENDEX ROAD
+   REAL COORDINATES:
+   X = -350 → 6500
+   Y = 0 → -350
+========================================= */
+
 function drawRoad() {
 
     const svgNS =
@@ -259,32 +266,40 @@ function drawRoad() {
             "image"
         );
 
+    /*
+       Extend road farther left.
+    */
     road.setAttribute(
         "x",
-        -100
+        -350
     );
 
     /*
-       Real Y = 0 corresponds to
-       SVG Y = 7000.
-
-       Negative real-world Y extends
-       downward on the SVG.
+       Real Y = 0
+       starts at SVG Y = 7000.
     */
-
     road.setAttribute(
         "y",
         SVG_HEIGHT
     );
 
+    /*
+       -350 → 6500
+       gives total width of 6850 cm.
+    */
     road.setAttribute(
         "width",
-        6600
+        6850
     );
 
+    /*
+       Road now extends 350 cm
+       downward:
+       real Y = 0 → -350.
+    */
     road.setAttribute(
         "height",
-        200
+        350
     );
 
     road.setAttribute(
