@@ -11,6 +11,12 @@ function read() { try { const raw = JSON.parse(localStorage.getItem(key()) || '{
 function save() { try { localStorage.setItem(key(),JSON.stringify(state)); return true; } catch { alert('Your browser could not save this change. Export a backup before closing.'); return false; } }
 const style = document.createElement('style');
 style.textContent = `
+#plant-panel:not(.hidden),#add-plant-panel:not(.hidden){animation:ld-panel-in 260ms cubic-bezier(.22,.61,.36,1)}
+@keyframes ld-panel-in{from{opacity:0;translate:20px 0}to{opacity:1;translate:0 0}}
+@media(max-width:768px){@keyframes ld-panel-in{from{opacity:0;translate:0 20px}to{opacity:1;translate:0 0}}}
+@media(prefers-reduced-motion:reduce){#plant-panel:not(.hidden),#add-plant-panel:not(.hidden){animation:none}}
+#ld button,#landscape-launch{transition:background-color 160ms ease,box-shadow 160ms ease}
+@media(prefers-reduced-motion:reduce){#ld button,#landscape-launch{transition:none}}
 #landscape-launch{position:fixed;bottom:22px;left:18px;z-index:60;background:#173f32;color:#fff;border:1px solid #e1e8d9;border-radius:30px;padding:14px 20px;font-weight:700;box-shadow:0 5px 20px #173f3230;cursor:pointer}
 #ld{position:fixed;inset:0;z-index:1300;background:#f5f4ec;color:#193e30;overflow:auto;font:15px/1.5 Arial,sans-serif}#ld[hidden]{display:none}#ld *{box-sizing:border-box}#ld header{background:#183f31;color:white;padding:24px max(22px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px}#ld header small{letter-spacing:3px;color:#c7d6b9}#ld h1{font:34px Georgia,serif;margin:4px 0}#ld h2{font:28px Georgia,serif;margin:0 0 14px}#ld h3{font-size:16px;margin:0 0 10px}#ld p{margin:8px 0 16px}#ld nav{display:flex;gap:8px;overflow:auto;padding:18px 0;border-bottom:1px solid #d8dfd0;margin-bottom:24px}#ld button{font:inherit;cursor:pointer;border:1px solid #c9d4c2;background:#fff;color:#193e30;border-radius:10px;padding:10px 14px;min-height:44px}#ld button.primary,#ld nav button[aria-selected=true]{background:#214f3a;color:white;border-color:#214f3a}#ld button:hover{filter:brightness(.94)}#ld button:focus-visible,#ld input:focus-visible,#ld select:focus-visible,#ld textarea:focus-visible{outline:3px solid #a8732b;outline-offset:2px}#ld .ld-wrap{max-width:1164px;margin:auto;padding:0 22px 40px}#ld .ld-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}#ld .ld-card{background:#fff;border:1px solid #dce2d5;border-radius:18px;padding:24px;margin-bottom:18px}#ld .ld-muted{color:#637467;font-size:13px}#ld .ld-tag{display:inline-block;border-radius:20px;background:#edf1e7;padding:4px 10px;font-size:12px;margin:0 5px 6px 0}#ld .ld-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #edf0e9}#ld .ld-row:last-child{border:0}#ld label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}#ld input,#ld select,#ld textarea{width:100%;padding:12px;border:1px solid #bdcbb7;border-radius:8px;font:16px Arial;background:#fff;color:#193e30;min-height:44px}#ld form button{margin-top:16px}#ld .ld-big{font:36px Georgia,serif}#ld .ld-actions{display:flex;gap:8px;flex-wrap:wrap}#ld .ld-done{text-decoration:line-through;opacity:.65}#ld .ld-check{width:24px;min-height:24px;flex:0 0 24px}#ld .ld-alert{padding:12px;background:#f7edd7;border-radius:10px;margin:10px 0}#ld .ld-weather{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#ld .ld-weather div{padding:12px;background:#edf2e8;border-radius:12px}#ld .ld-result{background:#edf2e8;border-radius:12px;padding:18px;margin:16px 0}#ld a{color:#214f3a}#ld .ld-empty{padding:20px 0;color:#637467}#ld footer{border-top:1px solid #d8dfd0;margin-top:24px;padding-top:15px}#ld .ld-section{margin-top:20px}@media(max-width:680px){#ld header{padding:20px}#ld h1{font-size:27px}#ld .ld-grid{grid-template-columns:1fr}#ld .ld-card{padding:18px}#ld .ld-wrap{padding:0 15px 30px}#ld nav button{white-space:nowrap}#landscape-launch{bottom:18px;left:12px;padding:12px 16px}#ld .ld-weather{grid-template-columns:1fr}#ld .ld-row{align-items:flex-start}}
 `;
@@ -18,13 +24,41 @@ document.head.append(style);
 const launch = document.createElement('button'); launch.id='landscape-launch';launch.textContent='🌿 Landscaping assistant';document.body.append(launch);
 const root=document.createElement('section');root.id='ld';root.hidden=true;root.setAttribute('aria-label','GardenDex landscaping assistant');document.body.append(root);
 const loginLink=document.createElement('button');loginLink.type='button';loginLink.textContent='Open landscaping workspace';loginLink.style.cssText='margin-top:14px;width:100%;min-height:44px;background:#e6eddf;color:#173f32;border:0;border-radius:8px;cursor:pointer';document.querySelector('.login-card')?.append(loginLink);
-function open(next='overview'){tab=next;root.hidden=false;render();root.querySelector('h1').focus();}
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let screenAnimation = null, closing = false, returnFocus = launch, previousTab = 'overview';
+function motion(element, frames, duration=240) {
+ if (reducedMotion.matches || !element.animate) return null;
+ return element.animate(frames,{duration,easing:'cubic-bezier(.22,.61,.36,1)'});
+}
+function open(next='overview') {
+ if (closing) return;
+ returnFocus = document.activeElement;
+ tab=next; previousTab=next; root.hidden=false; render();
+ screenAnimation?.cancel();
+ screenAnimation=motion(root,[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}]);
+ root.querySelector('h1').focus({preventScroll:true});
+}
+async function closeWorkspace() {
+ if (closing) return;
+ closing=true; screenAnimation?.cancel();
+ screenAnimation=motion(root,[{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(14px)'}],200);
+ try { await screenAnimation?.finished; } catch {}
+ root.hidden=true; closing=false;
+ (returnFocus?.isConnected ? returnFocus : launch).focus({preventScroll:true});
+}
+reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)screenAnimation?.cancel();});
 launch.onclick=()=>open();loginLink.onclick=()=>open();
 function render(){
 const openJobs=state.jobs.filter(j=>!j.done), planned=state.projects.reduce((n,p)=>n+Number(p.budget||0),0), spent=state.projects.reduce((n,p)=>n+Number(p.spent||0),0);
 root.innerHTML=`<header><div><small>GARDENDEX / HOGAN GARDEN</small><h1 tabindex="-1">Your landscaping companion</h1><span style="color:#cfdbc5">Plan the space. Care for what grows.</span></div><button id="ld-close">Back to garden</button></header><div class="ld-wrap"><nav aria-label="Landscaping workspace">${[['overview','Today'],['jobs','Jobs & care'],['projects','Projects'],['materials','Materials'],['backup','Backup']].map(([id,name])=>`<button data-tab="${id}" aria-selected="${tab===id}">${name}</button>`).join('')}</nav><div id="ld-content"></div><footer class="ld-muted">${owner==='guest'?'Guest workspace':'Signed-in workspace'} · Jobs, budgets and notes save in this browser only. Plant records stay in your existing garden database. Export a backup to move this workspace to another device.</footer></div>`;
-$('ld-close').onclick=()=>{root.hidden=true;launch.focus();};root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
+$('ld-close').onclick=closeWorkspace;root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
 const content=$('ld-content');
+const order=['overview','jobs','projects','materials','backup'];
+const direction=order.indexOf(tab)<order.indexOf(previousTab)?-1:1;
+if(tab!==previousTab) {
+ motion(content,[{opacity:0,transform:`translateX(${direction*12}px)`},{opacity:1,transform:'translateX(0)'}]);
+}
+previousTab=tab;
 if(tab==='overview'){
 content.innerHTML=`<div class="ld-grid"><div><div class="ld-card"><span class="ld-tag">YOUR NEXT STEPS</span><h2>A garden with a plan.</h2><p>Keep the big garden, driveway, children’s garden and planting areas moving forward, one job at a time.</p><div class="ld-actions"><button class="primary" data-go="jobs">+ Plan a job</button><button data-go="projects">Create a project</button></div></div><div class="ld-card"><h3>Work on your list</h3><div class="ld-big">${openJobs.length} open jobs</div><p class="ld-muted">${state.jobs.filter(j=>j.done).length} completed · ${openJobs.filter(j=>j.date && j.date<today()).length} overdue</p>${openJobs.slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).slice(0,3).map(j=>`<div class="ld-row"><span>${esc(j.title)}<br><small>${esc(j.zone)} · ${esc(j.date||'No due date')}</small></span></div>`).join('')||'<p>No jobs yet. Add your first task to get started.</p>'}</div></div><div><div class="ld-card"><h3>Galway weather & work window</h3><div id="ld-forecast" aria-live="polite">${forecast?weatherHTML():'Load the forecast to check rain, frost and wind before outdoor work.'}</div><button id="ld-weather-refresh">${forecast?'Refresh':'Load forecast'}</button><p class="ld-muted">Galway city forecast; your garden’s conditions may differ. <a href="https://open-meteo.com/" target="_blank" rel="noopener">Weather by Open-Meteo</a></p></div><div class="ld-card"><h3>Project budget</h3><div class="ld-big">${money(planned)}</div><p>${money(spent)} recorded spend · ${money(planned-spent)} remaining</p><button data-go="materials">Calculate bark, soil or gravel →</button></div></div></div>`;
 $('ld-weather-refresh').onclick=loadWeather;
