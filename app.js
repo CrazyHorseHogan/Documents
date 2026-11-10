@@ -115,6 +115,7 @@ await loadPlants();
 ========================================= */
 
 function drawGarden(rows) {
+    window.gardenSurveyRows = rows;
 
 
     /*
@@ -1610,6 +1611,7 @@ function zoomToZone(
     polygon,
     polygonName
 ) {
+    if (polygonName === "ChildrenGarden" && !placementMode) { openGarden3D(); return; }
 
     /*
        SVG calculates the exact bounding
@@ -3894,3 +3896,80 @@ function showPlantRemovalUndo(plant) {
  const close=document.createElement('button');close.textContent='Dismiss';close.style.cssText='min-height:44px;padding:8px;margin-left:8px;border:0;background:none;cursor:pointer';close.onclick=()=>toast.remove();toast.append(text,undo,close);document.body.append(toast);
  undo.onclick=async()=>{undo.disabled=true;try{const {data,error}=await supabaseClient.from('plants').update({status:plant.status||'Existing'}).eq('id',plant.id).select('id');if(error)throw error;if(!data?.length)throw new Error('No record was restored.');await loadPlants();toast.remove();}catch(error){text.textContent='Could not restore: '+error.message;undo.disabled=false;}};
 }
+
+/* First 3D zone: surveyed ground layout, illustrative vertical dimensions. */
+(() => {
+ const style=document.createElement('style');style.textContent=`#garden-3d{position:fixed;inset:0;z-index:1500;background:#e5eadc;color:#244733;font:14px Arial,sans-serif}#garden-3d[hidden]{display:none}#garden-3d header{position:absolute;top:0;left:0;right:0;z-index:2;padding:17px 22px;background:#faf8f2ed;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #cdd8c1}#garden-3d h2{margin:3px 0;font:25px Georgia,serif}#garden-3d small{color:#6b7e61}#garden-3d button{background:#28513b;border:0;color:white;border-radius:10px;padding:11px 14px;min-height:44px;cursor:pointer}#garden-3d-canvas{width:100%;height:100%;display:block;touch-action:none}#garden-3d-help{position:absolute;bottom:18px;left:18px;right:18px;max-width:600px;background:#fffdf1ed;padding:13px 16px;border:1px solid #d4ddc8;border-radius:12px;line-height:1.5;pointer-events:none}#garden-3d-message{position:absolute;top:120px;left:20px;right:20px;text-align:center;z-index:3}#garden-3d-launch{position:fixed;bottom:134px;left:20px;z-index:60;padding:11px 16px;min-height:44px;border:1px solid #cdd7bf;background:#faf8ef;color:#315440;border-radius:24px;cursor:pointer}@media(max-width:700px){#garden-3d header{padding:12px}#garden-3d h2{font-size:20px}#garden-3d header small{font-size:10px}#garden-3d-help{font-size:11px;bottom:12px;left:12px;right:12px}#garden-3d-launch{bottom:132px;left:12px;font-size:12px}}`;
+ document.head.append(style);
+ const button=document.createElement('button');button.id='garden-3d-launch';button.textContent='Children’s garden · 3D';button.onclick=()=>openGarden3D();document.body.append(button);
+ const root=document.createElement('section');root.id='garden-3d';root.hidden=true;root.setAttribute('aria-label','Interactive children’s garden 3D model');root.innerHTML='<header><div><small>GARDENDEX · 3D PROTOTYPE</small><h2>Children’s garden</h2><small>Surveyed layout · estimated heights and plant forms</small></div><div style="display:flex;gap:8px"><button id="garden-3d-reset">Reset view</button><button id="garden-3d-close">Back to map</button></div></header><canvas id="garden-3d-canvas" aria-label="Rotate and zoom the 3D garden"></canvas><div id="garden-3d-message" role="status"></div><div id="garden-3d-help">Drag to rotate · Pinch or scroll to zoom · Two fingers or right-drag to pan.<br>Arch, fence and lamp positions follow the map; vertical sizes, terrain level and rose positions are illustrative. This is not a construction survey.</div>';document.body.append(root);
+ let renderer=null,scene,camera,controls,resizeObserver=null,building=null,frame=0,returnFocus=null;
+ const message=document.getElementById('garden-3d-message');
+ const setView=()=>{if(!camera||!controls)return;camera.position.set(57,37,-22);controls.target.set(18,0,-59);controls.update();};
+ function close(){root.hidden=true;cancelAnimationFrame(frame);returnFocus?.focus();}
+ document.getElementById('garden-3d-close').onclick=close;document.getElementById('garden-3d-reset').onclick=setView;root.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+ function animate(){if(root.hidden)return;controls.update();renderer.render(scene,camera);frame=requestAnimationFrame(animate);}
+ async function build(){
+  const [THREE,orbit]=await Promise.all([import('https://esm.sh/three@0.180.0'),import('https://esm.sh/three@0.180.0/examples/jsm/controls/OrbitControls.js')]);
+  const canvas=document.getElementById('garden-3d-canvas');
+  let compatibility=false;
+  try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});}
+  catch{const {SVGRenderer}=await import('https://esm.sh/three@0.180.0/examples/jsm/renderers/SVGRenderer.js');renderer=new SVGRenderer();renderer.setQuality('low');renderer.domElement.id='garden-3d-canvas';renderer.domElement.setAttribute('aria-label','Rotate and zoom the 3D garden');canvas.replaceWith(renderer.domElement);compatibility=true;}
+  if(renderer.setPixelRatio)renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));if(renderer.shadowMap){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+  if(compatibility)document.getElementById('garden-3d-help').append(' Compatibility rendering: simplified lighting.');
+  scene=new THREE.Scene();scene.background=new THREE.Color('#dce6d0');scene.fog=new THREE.Fog('#dce6d0',100,185);
+  camera=new THREE.PerspectiveCamera(43,1,.1,250);controls=new orbit.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.minDistance=7;controls.maxDistance=110;controls.maxPolarAngle=Math.PI/2.08;
+  scene.add(new THREE.HemisphereLight('#fff7df','#6b8054',2.4));const sun=new THREE.DirectionalLight('#fff1cc',3);sun.position.set(15,55,0);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-75,right:75,top:75,bottom:-75,near:1,far:140});sun.shadow.bias=-.001;scene.add(sun);
+  const mat=(colour)=>compatibility?new THREE.MeshBasicMaterial({color:colour}):new THREE.MeshStandardMaterial({color:colour,roughness:.95});
+  const grass=mat('#9fb479'),bark=mat('#987856'),tarmac=mat('#626960'),concrete=mat('#b8b8a8'),stone=mat('#848a72'),leaf=mat('#527746');
+  const mesh=(geometry,material,x,y,z,parent=scene)=>{const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;};
+  const box=(w,h,d,m,x,y,z)=>mesh(new THREE.BoxGeometry(w,h,d),m,x,y,z);
+  if(!compatibility)mesh(new THREE.PlaneGeometry(200,200),mat('#b0c094'),25,-.09,-35).rotation.x=-Math.PI/2;
+  const groups={};for(const row of window.gardenSurveyRows||[])(groups[row.polygon]??=[]).push(row);
+  if(!groups.ChildrenGarden)throw Error('The garden survey is not loaded. Open your map first, then retry.');
+  for(const [name,rows] of Object.entries(groups)) {
+   rows.sort((a,b)=>Number(a.point_order)-Number(b.point_order));const shape=new THREE.Shape();rows.forEach((p,i)=>{const x=Number(p.x_cm)/100,y=Number(p.y_cm)/100;i?shape.lineTo(x,y):shape.moveTo(x,y);});shape.closePath();
+   const materials={ChildrenGarden:grass,BigGarden:grass,Bark:bark,Driveway:tarmac,PineTrees:mat('#60754e'),House:concrete};
+   const ground=mesh(new THREE.ShapeGeometry(shape),materials[name]||grass,0,.01,0);ground.rotation.x=-Math.PI/2;ground.castShadow=false;
+  }
+  // Shared tarmac spur and road entrance, without a raised kerb.
+  const groundPoly=points=>{const s=new THREE.Shape();points.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();const m=mesh(new THREE.ShapeGeometry(s),tarmac,0,.035,0);m.rotation.x=-Math.PI/2;m.castShadow=false;};
+  groundPoly([[25,50.85],[28,51.83],[28.5,48.44],[24.5,47.72]]);groundPoly([[4.1,0],[5.5,4],[9.2,4],[10.6,0]]);
+  const rail=(a,b,h,material,width=.12)=>{const start=new THREE.Vector3(a[0],h,-a[1]),end=new THREE.Vector3(b[0],h,-b[1]),delta=end.clone().sub(start);const m=mesh(new THREE.BoxGeometry(width,width,delta.length()),material,...start.clone().add(end).multiplyScalar(.5).toArray());m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),delta.normalize());};
+  const fenceChain=[[0,50],[10.629,48.798],[20.723,49.416],[25,50.853]];
+  const rightChain=[[28,51.826],[28.344,51.888],[34.524,53.948],[34.641,70]];
+  for(const chain of [fenceChain,rightChain])for(let i=0;i<chain.length-1;i++){
+   const a=chain[i],b=chain[i+1],length=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.ceil(length/2.5);
+   for(const h of [.35,.7,1.05])rail(a,b,h,concrete,.13);
+   for(let j=0;j<=n;j++)box(.18,1.28,.18,concrete,a[0]+(b[0]-a[0])*j/n,.64,-(a[1]+(b[1]-a[1])*j/n));
+  }
+  // Thick rendered masonry arch, built as a true extruded opening.
+  const archShape=new THREE.Shape();archShape.moveTo(-1.88,0);archShape.lineTo(-1.88,3.65);archShape.lineTo(1.88,3.65);archShape.lineTo(1.88,0);archShape.lineTo(1.48,0);archShape.lineTo(1.48,2);archShape.absellipse(0,2,1.48,1.25,0,Math.PI,false,0);archShape.lineTo(-1.48,0);archShape.closePath();
+  const arch=mesh(new THREE.ExtrudeGeometry(archShape,{depth:.4,bevelEnabled:true,bevelSize:.025,bevelThickness:.025,bevelSegments:1,steps:1}),concrete,26.5,0,-51.35);arch.rotation.y=.31;
+  box(4.02,.14,.6,mat('#919c89'),26.5,3.7,-51.35);
+  // West dry-stone boundary, repeatable irregular stones; no change to its line.
+  const stoneGeo=new THREE.DodecahedronGeometry(.27,0);
+  for(let i=0;i<90;i++){const m=mesh(stoneGeo,stone,0,.25+(i%2)*.3,-(47+i*.27));m.scale.set(.95,1,1.35);m.rotation.set(i*.7,i*.4,0);}
+  const lamp=(x,z)=>{mesh(new THREE.CylinderGeometry(.045,.07,2.3,8),mat('#ddd9c0'),x,1.15,z);mesh(new THREE.CylinderGeometry(.26,.13,.25,12),mat('#f5edcd'),x,2.4,z);mesh(new THREE.ConeGeometry(.3,.12,12),mat('#71876b'),x,2.58,z);};lamp(33.3,-51.8);lamp(15.2,-42);
+  // Roses observed beside archway: stylised, approximate placement and growth.
+  const bloomMaterial=mat('#b63e62'),pink=mat('#e6a0b4'),stem=mat('#42613d');
+  for(const [x,z,flowerMat] of [[24.75,-51.1,bloomMaterial],[28.2,-51.9,pink]]){
+   mesh(new THREE.CylinderGeometry(.025,.035,1.5,6),stem,x,.75,z);
+   for(let i=0;i<7;i++){const a=i*2.4,y=.35+i*.2;const m=mesh(new THREE.SphereGeometry(.16,7,5),leaf,x+Math.cos(a)*.17,y,z+Math.sin(a)*.17);m.scale.set(1,.4,1.7);}
+   for(let i=0;i<4;i++){const bx=x+Math.sin(i*2)*.23,bz=z+Math.cos(i*2)*.18,by=1+i*.16;for(let p=0;p<6;p++){const a=p*Math.PI/3;mesh(new THREE.SphereGeometry(.095,7,5),flowerMat,bx+Math.cos(a)*.065,by,bz+Math.sin(a)*.065);}}
+  }
+  // Grass detail stays within the surveyed children's garden (deterministic sampling).
+  const boundary=groups.ChildrenGarden.map(p=>[Number(p.x_cm)/100,Number(p.y_cm)/100]);
+  const inside=(x,y)=>{let yes=false;for(let i=0,j=boundary.length-1;i<boundary.length;j=i++){const a=boundary[i],b=boundary[j];if(((a[1]>y)!==(b[1]>y))&&(x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0]))yes=!yes;}return yes;};
+  const tuftGeo=new THREE.ConeGeometry(.055,.22,3),tufts=new THREE.InstancedMesh(tuftGeo,mat('#7e9b5d'),240),dummy=new THREE.Object3D();let count=0;
+  for(let i=0;i<300&&count<240;i++){const x=((i*7919)%3400)/100,y=49+((i*3571)%2100)/100;if(!inside(x,y))continue;dummy.position.set(x,.11,-y);dummy.rotation.y=i;dummy.updateMatrix();tufts.setMatrixAt(count++,dummy.matrix);}tufts.count=count;if(!compatibility)scene.add(tufts);
+  const resize=()=>{const w=root.clientWidth,h=root.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};resizeObserver=new ResizeObserver(resize);resizeObserver.observe(root);resize();setView();
+ }
+ window.openGarden3D=async()=>{
+  returnFocus=document.activeElement;root.hidden=false;message.textContent='Preparing your 3D garden…';document.getElementById('garden-3d-close').focus();
+  try{if(!window.gardenSurveyRows?.length){message.textContent='Load your garden map first, then open the 3D view.';return;}
+   if(!renderer){building??=build();await building;}
+   message.textContent='';cancelAnimationFrame(frame);animate();
+  }catch(error){message.textContent='3D view could not load: '+error.message+'. You can return to the map and retry.';building=null;if(renderer){renderer.dispose();renderer=null;}}
+ };
+})();
