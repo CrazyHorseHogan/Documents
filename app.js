@@ -194,6 +194,7 @@ drawRoad();
         );
 drawStoneWallBoundary();
 drawAllZoneBoundaries(polygons);
+drawGardenStructures(polygons);
 }
 
 function createMapLayers() {
@@ -3664,3 +3665,78 @@ function exitHouse() {
 }
 
 exitHouseBtn?.addEventListener("click", exitHouse);
+/* Physical features aligned to survey coordinates (centimetres).
+   Arch location is approximate, based on the owner's annotated plan. */
+function drawGardenStructures(polygons) {
+ const ns='http://www.w3.org/2000/svg';
+ const terrain=gardenMap.querySelector('#terrain-layer');
+ const boundary=gardenMap.querySelector('#boundary-layer');
+ const structures=gardenMap.querySelector('#structure-layer');
+ const make=(tag,attrs,parent)=>{const e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e;};
+ const label=(e,text)=>{const t=make('title',{},e);t.textContent=text;};
+ const xy=p=>`${p.x},${7000-p.y}`;
+ // Fill the surveyed splayed entrance between the road and recessed gate.
+ const entrance=make('g',{'id':'driveway-entrance','pointer-events':'none'},terrain);
+ label(entrance,'Tarmac entrance connecting the road to the garden driveway');
+ make('polygon',{points:'410,7000 550,6600 920,6600 1060,7000',fill:'#53534b',stroke:'#8b897d','stroke-width':8},entrance);
+ const defs=gardenMap.querySelector('defs')||make('defs',{},gardenMap);
+ const pattern=make('pattern',{id:'entrance-tarmac',width:300,height:300,patternUnits:'userSpaceOnUse'},defs);
+ make('image',{href:'assets/terrain/drivewaymoss.png',width:300,height:300},pattern);
+ make('polygon',{points:'410,7000 550,6600 920,6600 1060,7000',fill:'url(#entrance-tarmac)'},entrance);
+ // Ancient dry-stone wall: irregular, staggered stones along the west boundary.
+ const wall=make('g',{id:'west-dry-stone-wall','pointer-events':'none'},boundary);
+ label(wall,'Ancient loose dry-stone wall along the left boundary');
+ make('path',{d:'M 0 7000 L 0 0',stroke:'#343c30','stroke-width':105,fill:'none','stroke-linecap':'round',opacity:.28,transform:'translate(12 10)'},wall);
+ make('path',{d:'M 0 7000 L 0 0',stroke:'#686b58','stroke-width':82,fill:'none'},wall);
+ const colours=['#8c8b75','#a5a18a','#777e68','#b2ad96','#91967b'];
+ for(let i=0;i<110;i++) {
+  const y=i*65, shift=i%2?13:-16;
+  make('path',{d:`M ${shift-29} ${y+5} l 44 -4 15 19 -7 36 -44 4 -13 -23 Z`,fill:colours[i%5],stroke:'#525b49','stroke-width':5},wall);
+  if(i%3===0)make('path',{d:`M ${shift-20} ${y+45} l 28 -5`,stroke:'#5c7547','stroke-width':9,'stroke-linecap':'round',opacity:.8},wall);
+ }
+ // White timber fence follows only the children's garden's south and east edges.
+ const points=[...(polygons.ChildrenGarden||[])].sort((a,b)=>a.order-b.order);
+ const fence=make('g',{id:'children-garden-fence','pointer-events':'none'},structures);
+ label(fence,'White timber fence around the children’s garden, with an archway opening');
+ const fenceSegment=(a,b)=>{
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(!len)return;
+  const offset=12;
+  const rail=make('path',{d:`M ${xy(a)} L ${xy(b)}`,fill:'none',stroke:'#60664d','stroke-width':32,opacity:.35,transform:'translate(8 12)'},fence);
+  make('path',{d:rail.getAttribute('d'),fill:'none',stroke:'#f5f0dc','stroke-width':22,'stroke-linecap':'round'},fence);
+  make('path',{d:rail.getAttribute('d'),fill:'none',stroke:'#fffdf2','stroke-width':7,transform:`translate(0 ${-offset})`},fence);
+  const n=Math.ceil(len/95);
+  for(let i=0;i<=n;i++){const x=a.x+dx*i/n,y=7000-(a.y+dy*i/n);make('rect',{x:x-12,y:y-29,width:24,height:48,rx:4,fill:'#faf7e8',stroke:'#a3a58f','stroke-width':4},fence);}
+ };
+ // Traverse the recorded chain from the west edge to the eastern boundary.
+ if(points.length>=7){
+  const chain=[points[5],points[4],points[3],points[2],points[1],points[0]];
+  chain.slice(0,-1).forEach((a,i)=>{const b=chain[i+1];
+   if(a.x<2650&&b.x>2650){const at=x=>({x,y:a.y+(b.y-a.y)*(x-a.x)/(b.x-a.x)});fenceSegment(a,at(2500));fenceSegment(at(2800),b);}else fenceSegment(a,b);
+  });
+  const a=points[3],b=points[2],cx=2650,cy=a.y+(b.y-a.y)*(cx-a.x)/(b.x-a.x),sy=7000-cy;
+  // Tarmac spur crosses the full bark strip, joining the driveway to the arch.
+  // Derived from existing boundary segments; width follows the arch opening.
+  const borderY=x=>a.y+(b.y-a.y)*(x-a.x)/(b.x-a.x);
+  const driveA={x:2453.35638574316,y:4817.98704243306};
+  const driveB={x:3464.10161513775,y:5000};
+  const driveY=x=>driveA.y+(driveB.y-driveA.y)*(x-driveA.x)/(driveB.x-driveA.x);
+  const spur=make('g',{id:'archway-tarmac-path'},structures);
+  label(spur,'Tarmac path from the driveway to the children’s garden archway, dividing the bark into two sections');
+  const spurPoints=[{x:2500,y:borderY(2500)+5},{x:2800,y:borderY(2800)+5},{x:2850,y:driveY(2850)-45},{x:2450,y:driveY(2450)-45}];
+  make('polygon',{points:spurPoints.map(xy).join(' '),fill:'#53534b'},spur);
+  const path=make('polygon',{points:spurPoints.map(xy).join(' '),fill:'#53534b',stroke:'#8b897d','stroke-width':7,'stroke-linejoin':'round'},spur);
+  path.addEventListener('click',event=>{if(placementMode)return;event.stopPropagation();zoomToZone(path,'ArchwayPath');});
+  const arch=make('g',{id:'children-garden-archway',transform:`translate(${cx} ${sy})`,'pointer-events':'none'},structures);
+  label(arch,'White garden archway at the children’s garden border; position approximate');
+  make('ellipse',{cx:0,cy:35,rx:205,ry:48,fill:'#263b29',opacity:.2},arch);
+  make('path',{d:'M -150 35 L -150 -200 Q 0 -440 150 -200 L 150 35',fill:'none',stroke:'#69745c','stroke-width':37,transform:'translate(8 10)'},arch);
+  make('path',{d:'M -150 35 L -150 -200 Q 0 -440 150 -200 L 150 35',fill:'none',stroke:'#fff9e8','stroke-width':27,'stroke-linejoin':'round'},arch);
+  for(const x of [-150,150])for(let i=0;i<3;i++)make('path',{d:`M ${x-25} ${-i*65} L ${x+25} ${-i*65}`,stroke:'#e1dfc8','stroke-width':9},arch);
+ }
+ // Recessed entrance gate between the two existing surveyed wall ends.
+ const gate=make('g',{id:'entrance-gate','pointer-events':'none'},structures);
+ label(gate,'Double timber entrance gate, spanning the surveyed 3.7 metre opening');
+ for(const x of [550,920])make('rect',{x:x-23,y:6570,width:46,height:65,rx:5,fill:'#b0ac96',stroke:'#666954','stroke-width':7},gate);
+ const leaf=(x,w)=>{make('rect',{x,y:6582,width:w,height:37,rx:3,fill:'#716247',stroke:'#3d4335','stroke-width':7},gate);for(let t=x+12;t<x+w;t+=25)make('path',{d:`M ${t} 6583 V 6617`,stroke:'#bcab7f','stroke-width':9},gate);make('path',{d:`M ${x+5} 6615 L ${x+w-5} 6587`,stroke:'#4b503c','stroke-width':8},gate);};
+ leaf(565,165);leaf(740,165);
+}
