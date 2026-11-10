@@ -195,6 +195,7 @@ drawRoad();
 drawStoneWallBoundary();
 drawGardenStructures(polygons);
 refreshGardenAtlas();
+drawObservedGardenLamps();
 }
 
 function createMapLayers() {
@@ -3697,15 +3698,15 @@ function drawGardenStructures(polygons) {
  // White timber fence follows only the children's garden's south and east edges.
  const points=[...(polygons.ChildrenGarden||[])].sort((a,b)=>a.order-b.order);
  const fence=make('g',{id:'children-garden-fence','pointer-events':'none'},structures);
- label(fence,'White timber fence around the children’s garden, with an archway opening');
+ label(fence,'Weathered concrete post-and-rail fence around the children’s garden, with a masonry archway opening');
  const fenceSegment=(a,b)=>{
   const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(!len)return;
   const offset=12;
   const rail=make('path',{d:`M ${xy(a)} L ${xy(b)}`,fill:'none',stroke:'#60664d','stroke-width':32,opacity:.35,transform:'translate(8 12)'},fence);
-  make('path',{d:rail.getAttribute('d'),fill:'none',stroke:'#f5f0dc','stroke-width':22,'stroke-linecap':'round'},fence);
-  make('path',{d:rail.getAttribute('d'),fill:'none',stroke:'#fffdf2','stroke-width':7,transform:`translate(0 ${-offset})`},fence);
+  make('path',{d:rail.getAttribute('d'),fill:'none',stroke:'#b9b9a6','stroke-width':22,'stroke-linecap':'round'},fence);
+  make('path',{d:rail.getAttribute('d'),fill:'none',stroke:'#d3d0bc','stroke-width':7,transform:`translate(0 ${-offset})`},fence);
   const n=Math.ceil(len/95);
-  for(let i=0;i<=n;i++){const x=a.x+dx*i/n,y=7000-(a.y+dy*i/n);make('rect',{x:x-12,y:y-29,width:24,height:48,rx:4,fill:'#faf7e8',stroke:'#a3a58f','stroke-width':4},fence);}
+  for(let i=0;i<=n;i++){const x=a.x+dx*i/n,y=7000-(a.y+dy*i/n);make('rect',{x:x-12,y:y-29,width:24,height:48,rx:4,fill:'#bcbca9',stroke:'#7e8774','stroke-width':4},fence);}
  };
  // Traverse the recorded chain from the west edge to the eastern boundary.
  if(points.length>=7){
@@ -3727,11 +3728,11 @@ function drawGardenStructures(polygons) {
   const path=make('polygon',{points:spurPoints.map(xy).join(' '),fill:'#53534b',stroke:'#8b897d','stroke-width':7,'stroke-linejoin':'round'},spur);
   path.addEventListener('click',event=>{if(placementMode)return;event.stopPropagation();zoomToZone(path,'ArchwayPath');});
   const arch=make('g',{id:'children-garden-archway',transform:`translate(${cx} ${sy})`,'pointer-events':'none'},structures);
-  label(arch,'White garden archway at the children’s garden border; position approximate');
+  label(arch,'Rendered masonry archway at the children’s garden border; position approximate');
   make('ellipse',{cx:0,cy:35,rx:205,ry:48,fill:'#263b29',opacity:.2},arch);
   make('path',{d:'M -150 35 L -150 -200 Q 0 -440 150 -200 L 150 35',fill:'none',stroke:'#69745c','stroke-width':37,transform:'translate(8 10)'},arch);
-  make('path',{d:'M -150 35 L -150 -200 Q 0 -440 150 -200 L 150 35',fill:'none',stroke:'#fff9e8','stroke-width':27,'stroke-linejoin':'round'},arch);
-  for(const x of [-150,150])for(let i=0;i<3;i++)make('path',{d:`M ${x-25} ${-i*65} L ${x+25} ${-i*65}`,stroke:'#e1dfc8','stroke-width':9},arch);
+  make('path',{d:'M -150 35 L -150 -200 Q 0 -440 150 -200 L 150 35',fill:'none',stroke:'#c6c6b8','stroke-width':55,'stroke-linejoin':'round'},arch);
+  make('path',{d:'M -192 -276 L -192 -355 L 192 -355 L 192 -276',fill:'#c6c6b8',stroke:'#929b8b','stroke-width':8},arch);
  }
  // Recessed entrance gate between the two existing surveyed wall ends.
  const gate=make('g',{id:'entrance-gate','pointer-events':'none'},structures);
@@ -3805,4 +3806,56 @@ function refreshGardenAtlas() {
  document.getElementById('atlas-evening').onchange=e=>{const g=document.getElementById('house-ambience-preview');if(g)g.style.display=e.target.checked?'':'none';};
  document.getElementById('atlas-fit').onclick=()=>showWholeGarden();
  gardenMap.setAttribute('viewBox',WHOLE_GARDEN_VIEW);
+})();
+
+/* Photo survey: observations are drafts until positioned and saved by the owner.
+   Source photographs are not published to the public source repository. */
+const gardenPhotoObservations = [
+ {id:'red-rose',name:'Red rose by archway',species:'Rosa (cultivar unconfirmed)',type:'Climber',confidence:'Rose confirmed; climbing habit/cultivar to verify',location:'Left side of masonry arch in the supplied photo',notes:'Photo observation: red rose beside archway. Cultivar not legible enough to confirm. Leaf spotting and yellowing visible; diagnosis not confirmed from photo. Position must be selected on map.'},
+ {id:'pink-rose',name:'Pale-pink rose by archway',species:'Rosa (cultivar unconfirmed)',type:'Climber',confidence:'Rose confirmed; cultivar to verify',location:'Right side of masonry arch in the supplied photo',notes:'Photo observation: pale-pink rose beside archway. Pot visible in one photograph; confirm current planting status. Cultivar unconfirmed. Position must be selected on map.'},
+ {id:'azalea-geisha',name:'Azalea — Geisha Purple',species:"Rhododendron 'Geisha Purple'",type:'Shrub',confidence:'Confirmed by readable plant label',location:'Existing azalea record: inspect before adding another',existing:true,notes:"Photo label reads Azalea Geisha Purple. RHS lists Rhododendron 'Geisha Purple' (also 'Fumiko'). Existing azalea entries found; do not add a duplicate."},
+ {id:'glossy-shrub',name:'Glossy evergreen shrub — identification pending',species:'',type:'Shrub',confidence:'Possible Aucuba japonica; needs closer identification',location:'Near azalea, under trees by concrete fence',notes:'Photo observation: broad glossy evergreen leaves. Possible Aucuba japonica, not confirmed. Need clear close-up of a complete leaf, its edges, leaf arrangement and any flowers or berries. Do not apply species-specific pruning advice until identified.'},
+ {id:'ivy',name:'Ivy patch',species:'Hedera sp.',type:'Climber',confidence:'Ivy visible; species not confirmed',location:'Ground and woody stems in shaded border',notes:'Photo observation: ivy in shaded border. Record as a patch rather than an individual plant. Location and extent not surveyed.'},
+ {id:'bramble',name:'Bramble patch',species:'Rubus fruticosus aggregate (provisional)',type:'Shrub',confidence:'Probable bramble from leaves; confirmation needed',location:'Shaded border photographs',notes:'Photo observation: probable bramble. Identification and patch extent need confirmation before maintenance work.'},
+ {id:'dock',name:'Dock-like plants',species:'Rumex sp. (provisional)',type:'Flower',confidence:'Probable dock; species not confirmed',location:'Grass beside newly cleared border',notes:'Photo observation: broad-leaved dock-like plants along cleared bed. Need close-ups of leaf base, stem and seedhead for species confirmation.'},
+ {id:'purple-trees',name:'Purple-leaved boundary trees',species:'',type:'Tree',confidence:'Unconfirmed: copper beech or purple-leaved maple among possibilities',location:'Boundary and wide garden photographs',notes:'Distant purple-leaved trees cannot be confidently matched to existing maple or beech records. Need leaf and bark close-ups plus trunk locations. Do not add duplicates or assume species from foliage colour.'}
+];
+function drawObservedGardenLamps() {
+ const ns='http://www.w3.org/2000/svg',layer=gardenMap.querySelector('#structure-layer');
+ const group=document.createElementNS(ns,'g');group.id='photo-survey-lamps';group.setAttribute('pointer-events','none');layer.append(group);
+ const title=document.createElementNS(ns,'title');title.textContent='Two cream garden lamps observed in photographs; map positions approximate and require confirmation';group.append(title);
+ for(const [x,y] of [[3330,5180],[1520,4200]]) {
+  const g=document.createElementNS(ns,'g');g.setAttribute('transform',`translate(${x} ${7000-y})`);group.append(g);
+  const shape=(tag,attrs)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);g.append(e);};
+  shape('ellipse',{cx:18,cy:16,rx:36,ry:14,fill:'#263a30',opacity:.2});
+  shape('path',{d:'M 0 0 L 0 -160',stroke:'#e7e3c8','stroke-width':14});
+  shape('path',{d:'M -38 -170 Q 0 -191 38 -170 L 24 -140 Q 0 -127 -24 -140 Z',fill:'#f3edcf',stroke:'#8c9d79','stroke-width':6});
+  shape('ellipse',{cx:0,cy:-172,rx:39,ry:10,fill:'#667f5e'});
+  shape('circle',{cx:0,cy:8,r:38,fill:'none',stroke:'#be8c43','stroke-width':5,'stroke-dasharray':'9 8'});
+ }
+}
+(() => {
+ const css=document.createElement('style');css.textContent=`#photo-survey-open{position:fixed;bottom:82px;left:20px;z-index:61;background:#faf8ef;color:#315440;border:1px solid #cdd7bf;border-radius:24px;padding:11px 16px;min-height:44px;cursor:pointer;box-shadow:0 4px 16px #23453015}#photo-survey-panel{position:fixed;inset:0;z-index:1400;background:#f5f2e8;overflow:auto;color:#2b4c3a;padding:24px max(20px,calc((100% - 900px)/2));font:15px/1.5 Arial}#photo-survey-panel[hidden]{display:none}#photo-survey-panel h2{font:30px Georgia,serif}#photo-survey-panel article{padding:20px;background:#fffdf6;border:1px solid #d7dfce;border-radius:14px;margin:14px 0}#photo-survey-panel h3{margin:0 0 6px}#photo-survey-panel small{color:#6c755e}#photo-survey-panel button{padding:10px 15px;min-height:44px;background:#2b533d;color:white;border:0;border-radius:9px;cursor:pointer}#photo-survey-panel a{color:#36583d}#photo-survey-panel p{margin:8px 0}#photo-survey-panel .survey-warning{padding:14px;background:#eae5d2;border-radius:10px}@media(max-width:700px){#photo-survey-open{left:12px;bottom:80px;font-size:12px}}`;
+ document.head.append(css);
+ const button=document.createElement('button');button.id='photo-survey-open';button.textContent='Photo survey · 8 observations';document.body.append(button);
+ const panel=document.createElement('section');panel.id='photo-survey-panel';panel.hidden=true;panel.setAttribute('aria-label','Garden photo survey');document.body.append(panel);
+ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const close=()=>{panel.hidden=true;button.focus();};
+ button.onclick=()=>{
+ panel.innerHTML='<button id="photo-survey-close">Back to garden</button><h2>Your garden, observed</h2><p>Plant observations from your photographs. These are identification drafts, not saved plant records. Match existing plants first; select the real location before saving a new one.</p><p class="survey-warning">The two cream lamps are shown with amber dashed position markers: their locations are approximate. The archway and fence now reflect masonry and concrete seen in your photographs. No source photos have been published.</p>'+gardenPhotoObservations.map(o=>`<article><h3>${escape(o.name)}</h3><small>${escape(o.confidence)}</small><p>${escape(o.location)}</p><p>${escape(o.notes)}</p>${o.existing?'<button data-existing="azalea">View existing azalea</button>':`<button data-observation="${o.id}">Choose location & review plant</button>`}</article>`).join('')+'<p>Identification references: <a href="https://www.rhs.org.uk/plants/51322/rhododendron-geisha-purple/details" target="_blank" rel="noopener">Azalea Geisha Purple</a> · <a href="https://www.rhs.org.uk/plants/148757/aucuba-japonica/details" target="_blank" rel="noopener">Aucuba comparison</a></p>';
+ panel.hidden=false;document.getElementById('photo-survey-close').onclick=close;
+ panel.querySelectorAll('[data-observation]').forEach(b=>b.onclick=async()=>{
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(!session){alert('Sign in to GardenDex first, then choose a location and save the plant using your existing plant form.');return;}
+  const o=gardenPhotoObservations.find(o=>o.id===b.dataset.observation);panel.hidden=true;
+  addPlantForm.reset();document.getElementById('new-common-name').value=o.name;document.getElementById('new-species').value=o.species;document.getElementById('new-plant-type').value=o.type;document.getElementById('new-condition').value='Unknown';document.getElementById('new-notes').value=o.notes+' Identification confidence: '+o.confidence;
+  updatePlantingGroupFields();startPlantPlacement();
+ });
+ panel.querySelector('[data-existing]').onclick=async()=>{
+  const {data,error}=await supabaseClient.from('plants').select('*').ilike('common_name','%azalea%').order('id').limit(1);
+  if(error||!data?.length){alert('Could not load an existing azalea record. Please check your connection.');return;}
+  panel.hidden=true;openPlantProfile(data[0]);
+ };
+ };
+ panel.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 })();
