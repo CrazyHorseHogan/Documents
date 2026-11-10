@@ -3056,7 +3056,7 @@ async function loadPlants() {
             status === "planned"
         );
 
-    if (shouldShow) {
+    if (shouldShow && status !== "removed") {
         drawPlantMarker(plant);
     }
 
@@ -3068,6 +3068,8 @@ async function loadPlants() {
 ========================================= */
 
 function getPlantArtwork(plant) {
+    const botanicalArtwork = getBotanicalPlantArtwork(plant);
+    if (botanicalArtwork) return botanicalArtwork;
 
     const commonName =
         (plant.common_name || "")
@@ -3414,6 +3416,7 @@ function getConditionColour(condition) {
 ========================================= */
 
 function openPlantProfile(plant) {
+    renderPlantRemoval(plant);
 
     document
         .getElementById("plant-name")
@@ -3842,3 +3845,52 @@ function drawObservedGardenLamps() {
  };
  panel.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 })();
+
+/* Illustrated map symbols: representative artwork, not mature-size measurements. */
+function getBotanicalPlantArtwork(plant) {
+ const name=((plant.common_name||'')+' '+(plant.species||'')).toLowerCase();
+ let body='';
+ const leaves='<ellipse cx="63" cy="146" rx="32" ry="15" transform="rotate(35 63 146)" fill="#426e43"/><ellipse cx="131" cy="132" rx="31" ry="14" transform="rotate(-35 131 132)" fill="#688d4a"/><ellipse cx="76" cy="176" rx="28" ry="13" transform="rotate(30 76 176)" fill="#5d8447"/>';
+ if(/rose|rosa\b/.test(name)) {
+  const pink=/pink|pale|blush/.test(name), base=pink?'#d87894':'#a32849',light=pink?'#f6c4cf':'#e76b83';
+  body='<path d="M 100 195 Q 84 133 105 82" fill="none" stroke="#41633e" stroke-width="9" stroke-linecap="round"/>'+leaves;
+  for(let i=0;i<9;i++){const a=i*Math.PI*2/9;body+=`<ellipse cx="${100+Math.cos(a)*27}" cy="${73+Math.sin(a)*25}" rx="25" ry="20" transform="rotate(${i*40} ${100+Math.cos(a)*27} ${73+Math.sin(a)*25})" fill="${i%2?base:light}" stroke="${base}" stroke-width="2"/>`;}
+  body+=`<circle cx="100" cy="73" r="25" fill="${base}"/><path d="M 85 75 Q 86 48 111 58 Q 133 76 104 87 Q 87 90 94 68 Q 107 59 113 73" fill="none" stroke="${light}" stroke-width="5" stroke-linecap="round"/>`;
+ } else if(/azalea|rhododendron/.test(name)) {
+  for(let i=0;i<17;i++){const a=i*2.4,r=15+(i%4)*13;body+=`<ellipse cx="${100+Math.cos(a)*r}" cy="${111+Math.sin(a)*r}" rx="25" ry="17" fill="${i%2?'#416c48':'#729356'}"/>`;}
+  for(const [x,y] of [[70,90],[123,99],[95,130],[132,143],[64,136]]){for(let i=0;i<5;i++){const a=i*Math.PI*2/5;body+=`<circle cx="${x+Math.cos(a)*10}" cy="${y+Math.sin(a)*10}" r="10" fill="${i%2?'#ad5e9f':'#d993c8'}"/>`;}body+=`<circle cx="${x}" cy="${y}" r="4" fill="#f4d0a7"/>`;}
+ } else if(/bluebell|hyacinthoides/.test(name)) {
+  for(const x of [67,100,133]){body+=`<path d="M ${x} 194 Q ${x-15} 99 ${x+9} 48" fill="none" stroke="#527449" stroke-width="5"/>`;for(let i=0;i<4;i++)body+=`<path d="M ${x+5} ${62+i*24} q 23 -8 22 15 l -22 4 q -7 -11 0 -19 Z" fill="${i%2?'#8274b8':'#5c5fa1'}" stroke="#494f86" stroke-width="2"/>`;}
+  body+='<path d="M 100 200 Q 30 150 47 97 Q 69 143 100 200 M 100 200 Q 157 150 160 108 Q 175 169 100 200" fill="#698c4c"/>';
+ } else return null;
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220"><ellipse cx="100" cy="201" rx="58" ry="10" fill="#253f30" opacity=".16"/>${body}</svg>`;
+ return {image:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),size:/rose|rosa\b/.test(name)?290:310};
+}
+
+function renderPlantRemoval(plant) {
+ let section=document.getElementById('plant-removal');
+ if(!section){section=document.createElement('section');section.id='plant-removal';section.className='plant-section';plantPanel.append(section);}
+ section.replaceChildren();
+ const button=document.createElement('button');button.type='button';button.textContent='Delete plant';button.style.cssText='padding:12px 16px;border:1px solid #c99a8a;border-radius:10px;background:#fff5ee;color:#8c3e2e;min-height:44px;cursor:pointer';
+ const note=document.createElement('p');note.style.cssText='font-size:12px;color:#6c786a';note.textContent='Removes this entry from the map. The record is archived so it can be recovered.';
+ const message=document.createElement('p');message.setAttribute('aria-live','polite');section.append(button,note,message);
+ button.onclick=async()=>{
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(!session){message.textContent='Sign in to delete a plant.';return;}
+  if(!confirm(`Delete “${plant.common_name||'this plant'}” from the garden map? The record will be archived.`))return;
+  button.disabled=true;message.textContent='Removing plant…';
+  try {
+   const {data,error}=await supabaseClient.from('plants').update({status:'Removed'}).eq('id',plant.id).select('id');
+   if(error)throw error;if(!data?.length)throw new Error('Your account does not have permission to update this plant.');
+   plantPanel.classList.add('hidden');await loadPlants();showPlantRemovalUndo(plant);
+  } catch(error){message.textContent='Could not remove plant: '+error.message;button.disabled=false;}
+ };
+}
+function showPlantRemovalUndo(plant) {
+ document.getElementById('plant-removal-toast')?.remove();
+ const toast=document.createElement('div');toast.id='plant-removal-toast';toast.style.cssText='position:fixed;bottom:145px;left:20px;right:20px;max-width:480px;z-index:1200;padding:16px;background:#fcfaf1;border:1px solid #c4d1b9;border-radius:14px;box-shadow:0 8px 30px #193c3022;color:#294b39';toast.setAttribute('role','status');
+ const text=document.createElement('span');text.textContent=(plant.common_name||'Plant')+' removed. ';
+ const undo=document.createElement('button');undo.textContent='Undo';undo.style.cssText='min-height:44px;padding:8px 16px;margin-left:8px;border:0;border-radius:8px;background:#294b39;color:white;cursor:pointer';
+ const close=document.createElement('button');close.textContent='Dismiss';close.style.cssText='min-height:44px;padding:8px;margin-left:8px;border:0;background:none;cursor:pointer';close.onclick=()=>toast.remove();toast.append(text,undo,close);document.body.append(toast);
+ undo.onclick=async()=>{undo.disabled=true;try{const {data,error}=await supabaseClient.from('plants').update({status:plant.status||'Existing'}).eq('id',plant.id).select('id');if(error)throw error;if(!data?.length)throw new Error('No record was restored.');await loadPlants();toast.remove();}catch(error){text.textContent='Could not restore: '+error.message;undo.disabled=false;}};
+}
