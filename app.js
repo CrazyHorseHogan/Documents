@@ -193,8 +193,8 @@ drawRoad();
             }
         );
 drawStoneWallBoundary();
-drawAllZoneBoundaries(polygons);
 drawGardenStructures(polygons);
+refreshGardenAtlas();
 }
 
 function createMapLayers() {
@@ -3740,3 +3740,69 @@ function drawGardenStructures(polygons) {
  const leaf=(x,w)=>{make('rect',{x,y:6582,width:w,height:37,rx:3,fill:'#716247',stroke:'#3d4335','stroke-width':7},gate);for(let t=x+12;t<x+w;t+=25)make('path',{d:`M ${t} 6583 V 6617`,stroke:'#bcab7f','stroke-width':9},gate);make('path',{d:`M ${x+5} 6615 L ${x+w-5} 6587`,stroke:'#4b503c','stroke-width':8},gate);};
  leaf(565,165);leaf(740,165);
 }
+
+/* Botanical atlas presentation. Survey polygons and house artwork are unchanged. */
+function refreshGardenAtlas() {
+ const ns='http://www.w3.org/2000/svg';
+ const el=(tag,attrs,parent)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;};
+ const defs=gardenMap.querySelector('#gardendex-materials');
+ const pattern=(id,colour)=>{const p=el('pattern',{id,width:240,height:240,patternUnits:'userSpaceOnUse'},defs);el('rect',{width:240,height:240,fill:colour},p);return p;};
+ const grass=pattern('atlas-lawn','#a8bc81');
+ el('rect',{width:120,height:240,fill:'#b4c68d',opacity:.45},grass);
+ for(let i=0;i<20;i++)el('path',{d:`M ${(i*67)%240} ${(i*37)%240} l 3 -9 3 9`,fill:'none',stroke:'#768c58','stroke-width':1.5,opacity:.35},grass);
+ const pine=pattern('atlas-pine','#647b53');
+ for(let i=0;i<24;i++)el('circle',{cx:(i*71)%240,cy:(i*43)%240,r:4+(i%4),fill:i%2?'#a3ae7a':'#344f40',opacity:.4},pine);
+ const bark=pattern('atlas-bark','#a18463');
+ for(let i=0;i<24;i++)el('path',{d:`M ${(i*73)%240} ${(i*41)%240} l ${10+i%9} ${i%2?7:-8}`,stroke:i%2?'#795f46':'#c3ab87','stroke-width':4,'stroke-linecap':'round',opacity:.6},bark);
+ const tarmac=pattern('atlas-tarmac','#60675f');
+ for(let i=0;i<50;i++)el('circle',{cx:(i*67)%240,cy:(i*43)%240,r:1.6,fill:i%2?'#d8dbbf':'#303e35',opacity:.35},tarmac);
+ for(const [id,replacement] of [['big-garden-artwork-pattern','atlas-lawn'],['children-garden-artwork-pattern','atlas-lawn'],['pine-trees-artwork-pattern','atlas-pine'],['driveway-artwork-pattern','atlas-tarmac']]) {
+  gardenMap.querySelectorAll(`[fill="url(#${id})"]`).forEach(e=>e.setAttribute('fill',`url(#${replacement})`));
+ }
+ gardenMap.querySelectorAll('.bark-artwork').forEach(e=>e.setAttribute('fill','url(#atlas-bark)'));
+ gardenMap.querySelectorAll('#archway-tarmac-path polygon,#driveway-entrance polygon').forEach(e=>{e.setAttribute('fill','url(#atlas-tarmac)');e.setAttribute('stroke','none');});
+ // Label existing zones, with no invented planting or changes to measured boundaries.
+ const layer=el('g',{id:'atlas-labels','pointer-events':'none'},gardenMap.querySelector('#overlay-layer'));
+ const text=(x,y,name)=>{const t=el('text',{x,y,'text-anchor':'middle','font-family':'Georgia,serif','font-size':92,fill:'#304e3d','paint-order':'stroke',stroke:'#e7edd6','stroke-width':9,'stroke-linejoin':'round'},layer);t.textContent=name;};
+ text(1700,850,'Children’s garden');text(3500,4200,'Main garden');
+ // House ambience is a visual proposal, separate from the saved map records.
+ const ambience=el('g',{id:'house-ambience-preview','pointer-events':'none',style:'display:none'},gardenMap.querySelector('#overlay-layer'));
+ const title=el('title',{},ambience);title.textContent='Evening ambience concept: proposed warm lights and planters, not recorded garden features';
+ const glow=el('radialGradient',{id:'atlas-warm-light'},defs);
+ el('stop',{offset:0,'stop-color':'#ffdf8b','stop-opacity':.7},glow);el('stop',{offset:1,'stop-color':'#ffdf8b','stop-opacity':0},glow);
+ // The house image is retained exactly. Pools of light sit on the existing drive.
+ for(const [x,y] of [[3960,1630],[4240,1800],[5050,1770],[5470,1550]]) {
+  el('ellipse',{cx:x,cy:y,rx:260,ry:200,fill:'url(#atlas-warm-light)'},ambience);
+  el('circle',{cx:x,cy:y,r:13,fill:'#ffefb5',stroke:'#68583b','stroke-width':7},ambience);
+ }
+ for(const [x,y] of [[4120,1670],[5160,1620]]) {
+  el('ellipse',{cx:x+12,cy:y+18,rx:65,ry:45,fill:'#253b30',opacity:.25},ambience);
+  el('circle',{cx:x,cy:y,r:53,fill:'#b18d63',stroke:'#d2b08a','stroke-width':9},ambience);
+  for(let i=0;i<7;i++){const a=i*Math.PI*2/7;el('circle',{cx:x+Math.cos(a)*23,cy:y+Math.sin(a)*23,r:27,fill:i%2?'#758e58':'#536f4a'},ambience);}
+ }
+ const note=el('text',{x:4750,y:2100,'text-anchor':'middle','font-family':'Arial,sans-serif','font-size':65,fill:'#fff2c9','paint-order':'stroke',stroke:'#475044','stroke-width':8},ambience);note.textContent='EVENING AMBIENCE · CONCEPT';
+ if(document.getElementById('atlas-evening')?.checked)ambience.style.display='';
+}
+
+(() => {
+ const css=document.createElement('style');css.textContent=`
+ :root{--forest:#244c3b;--cream:#f4f1e8;--text:#294b3c}
+ .top-bar{background:#faf8f0;color:#234734;border-bottom:1px solid #d4dacb;height:86px;padding:0 26px;box-shadow:0 3px 16px #304f3710}
+ .brand h1{font-family:Georgia,serif;font-weight:400;font-size:29px;letter-spacing:-.04em}.brand p{opacity:1;color:#73816b;font-size:11px;letter-spacing:.1em}
+ .location-label{color:#7b8773}.connection-status{background:#e6ecdf;color:#446347;border:1px solid #d5deca;font-size:11px}
+ main{height:calc(100dvh - 86px)}#map-container{background-color:#eaece0;background-image:radial-gradient(#b5c1a433 .8px,transparent .8px);background-size:18px 18px}
+ #garden-map{filter:drop-shadow(0 12px 18px #334f3020)}.map-polygon{stroke:#6e805d;stroke-width:5;filter:none}
+ .plant-view-filter{top:103px;left:20px;padding:5px 7px;background:#fffdf5ee;box-shadow:0 3px 12px #263e3010;border-radius:30px}.filter-buttons{border-radius:24px;background:#eef0e7}.plant-filter-button{border-radius:22px;min-height:38px}.filter-label{padding-left:9px}
+ #atlas-controls{position:absolute;top:106px;right:20px;z-index:21;display:flex;gap:8px;align-items:center;background:#fffdf5ee;border:1px solid #d4ddc9;border-radius:24px;padding:5px 12px;box-shadow:0 3px 12px #263e3010;font-size:12px;color:#3d5b43}
+ #atlas-controls label{display:flex;align-items:center;gap:7px;cursor:pointer;min-height:35px}#atlas-controls input{accent-color:#365d40;width:17px;height:17px;min-height:17px;margin:0}#atlas-fit{border:0;background:none;color:#355a40;border-left:1px solid #d9dfd1;padding:6px 0 6px 10px;cursor:pointer;min-height:35px}
+ #landscape-launch{background:#244c3b!important;font-weight:500!important;box-shadow:0 8px 24px #23453025!important;border-color:#fff9!important}#quick-add{background:#244c3b;box-shadow:0 8px 24px #23453025}
+ #plant-panel,#add-plant-panel{background:#fcfaf2;border:1px solid #d8dfcf;border-radius:20px;box-shadow:0 16px 50px #233f3025}.dex-number{color:#89936f;letter-spacing:.15em}#plant-panel h2,#add-plant-panel h2{font-family:Georgia,serif;font-weight:400}
+ .login-card{background:#fcfaf4;border:1px solid #d8dfcf;box-shadow:0 20px 70px #173f3220}.login-card h1{font-family:Georgia,serif;font-weight:400}
+ @media(max-width:700px){.top-bar{height:78px;padding:0 17px}.brand h1{font-size:25px}.brand p{font-size:8px;letter-spacing:.05em}.connection-status{display:none}main{height:calc(100dvh - 78px)}.plant-view-filter{top:91px;left:12px}.plant-filter-button{font-size:12px;min-height:36px;padding:5px 10px}#atlas-controls{top:148px;left:12px;right:auto;font-size:11px;padding:2px 11px}#atlas-controls label{min-height:33px}#atlas-fit{min-height:33px}#landscape-launch{font-size:13px!important;padding:13px 15px!important;bottom:20px!important}#quick-add{width:52px;height:52px;right:15px;bottom:20px}}
+ `;document.head.append(css);
+ document.querySelector('.brand p').textContent='HOGAN GARDEN · LIVING ATLAS';
+ const controls=document.createElement('div');controls.id='atlas-controls';controls.innerHTML='<label><input id="atlas-evening" type="checkbox">Evening preview</label><button id="atlas-fit" type="button" title="Fit the whole garden">Fit garden</button>';document.body.append(controls);
+ document.getElementById('atlas-evening').onchange=e=>{const g=document.getElementById('house-ambience-preview');if(g)g.style.display=e.target.checked?'':'none';};
+ document.getElementById('atlas-fit').onclick=()=>showWholeGarden();
+ gardenMap.setAttribute('viewBox',WHOLE_GARDEN_VIEW);
+})();
