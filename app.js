@@ -1611,7 +1611,7 @@ function zoomToZone(
     polygon,
     polygonName
 ) {
-    if (polygonName === "ChildrenGarden" && !placementMode) { openGarden3D(); return; }
+    if (!placementMode && (window.gardenSurveyRows?.some(row => row.polygon === polygonName) || polygonName === "ArchwayPath")) { openGarden3D(polygonName); return; }
 
     /*
        SVG calculates the exact bounding
@@ -3899,18 +3899,38 @@ function showPlantRemovalUndo(plant) {
 
 /* First 3D zone: surveyed ground layout, illustrative vertical dimensions. */
 (() => {
- const style=document.createElement('style');style.textContent=`#garden-3d{position:fixed;inset:0;z-index:1500;background:#e5eadc;color:#244733;font:14px Arial,sans-serif}#garden-3d[hidden]{display:none}#garden-3d header{position:absolute;top:0;left:0;right:0;z-index:2;padding:17px 22px;background:#faf8f2ed;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #cdd8c1}#garden-3d h2{margin:3px 0;font:25px Georgia,serif}#garden-3d small{color:#6b7e61}#garden-3d button{background:#28513b;border:0;color:white;border-radius:10px;padding:11px 14px;min-height:44px;cursor:pointer}#garden-3d-canvas{width:100%;height:100%;display:block;touch-action:none}#garden-3d-help{position:absolute;bottom:18px;left:18px;right:18px;max-width:600px;background:#fffdf1ed;padding:13px 16px;border:1px solid #d4ddc8;border-radius:12px;line-height:1.5;pointer-events:none}#garden-3d-message{position:absolute;top:120px;left:20px;right:20px;text-align:center;z-index:3}#garden-3d-launch{position:fixed;bottom:134px;left:20px;z-index:60;padding:11px 16px;min-height:44px;border:1px solid #cdd7bf;background:#faf8ef;color:#315440;border-radius:24px;cursor:pointer}@media(max-width:700px){#garden-3d header{padding:12px}#garden-3d h2{font-size:20px}#garden-3d header small{font-size:10px}#garden-3d-help{font-size:11px;bottom:12px;left:12px;right:12px}#garden-3d-launch{bottom:132px;left:12px;font-size:12px}}`;
+ const style=document.createElement('style');style.textContent=`#garden-3d{position:fixed;inset:0;z-index:1500;background:#e5eadc;color:#244733;font:14px Arial,sans-serif}#garden-3d[hidden]{display:none}#garden-3d header{position:absolute;top:0;left:0;right:0;z-index:2;padding:17px 22px;background:#faf8f2ed;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #cdd8c1}#garden-3d h2{margin:3px 0;font:25px Georgia,serif}#garden-3d small{color:#6b7e61}#garden-3d button{background:#28513b;border:0;color:white;border-radius:10px;padding:11px 14px;min-height:44px;cursor:pointer}#garden-3d-canvas{width:100%;height:100%;display:block;touch-action:none}#garden-3d-help{position:absolute;bottom:18px;left:18px;right:18px;max-width:600px;background:#fffdf1ed;padding:13px 16px;border:1px solid #d4ddc8;border-radius:12px;line-height:1.5;pointer-events:none}#garden-3d-message{position:absolute;top:120px;left:20px;right:20px;text-align:center;z-index:3}#garden-3d-launch{position:fixed;bottom:134px;left:20px;z-index:60;padding:11px 16px;min-height:44px;border:1px solid #cdd7bf;background:#faf8ef;color:#315440;border-radius:24px;cursor:pointer}@media(max-width:700px){#garden-3d header{padding:12px;align-items:flex-start;gap:6px}#garden-3d header button{font-size:11px;padding:8px}#garden-3d h2{font-size:20px}#garden-3d header small{font-size:10px}#garden-3d-help{font-size:11px;bottom:12px;left:12px;right:12px}#garden-3d-launch{bottom:132px;left:12px;font-size:12px}}`;
  document.head.append(style);
- const button=document.createElement('button');button.id='garden-3d-launch';button.textContent='Children’s garden · 3D';button.onclick=()=>openGarden3D();document.body.append(button);
- const root=document.createElement('section');root.id='garden-3d';root.hidden=true;root.setAttribute('aria-label','Interactive children’s garden 3D model');root.innerHTML='<header><div><small>GARDENDEX · 3D PROTOTYPE</small><h2>Children’s garden</h2><small>Surveyed layout · estimated heights and plant forms</small></div><div style="display:flex;gap:8px"><button id="garden-3d-reset">Reset view</button><button id="garden-3d-close">Back to map</button></div></header><canvas id="garden-3d-canvas" aria-label="Rotate and zoom the 3D garden"></canvas><div id="garden-3d-message" role="status"></div><div id="garden-3d-help">Drag to rotate · Pinch or scroll to zoom · Two fingers or right-drag to pan.<br>Arch, fence and lamp positions follow the map; vertical sizes, terrain level and rose positions are illustrative. This is not a construction survey.</div>';document.body.append(root);
- let renderer=null,scene,camera,controls,resizeObserver=null,building=null,frame=0,returnFocus=null;
+ const button=document.createElement('button');button.id='garden-3d-launch';button.textContent='Explore garden · 3D';button.onclick=()=>openGarden3D('WholeGarden');document.body.append(button);
+ const root=document.createElement('section');root.id='garden-3d';root.hidden=true;root.setAttribute('aria-label','Interactive garden zones in 3D');root.innerHTML='<header><div><small>GARDENDEX · 3D PROTOTYPE</small><h2 id="garden-3d-title">Whole garden</h2><label style="font-size:12px">Zone <select id="garden-3d-zone" aria-label="Zone" style="padding:7px;border:1px solid #cad5bd;border-radius:7px;color:#284b36;background:#fffdf5;max-width:180px"></select></label><small>Surveyed layout · estimated heights and plant forms</small></div><div style="display:flex;gap:8px"><button id="garden-3d-reset">Reset view</button><button id="garden-3d-close">Back to map</button></div></header><canvas id="garden-3d-canvas" aria-label="Rotate and zoom the 3D garden"></canvas><div id="garden-3d-message" role="status"></div><div id="garden-3d-help">Drag to rotate · Pinch or scroll to zoom · Two fingers or right-drag to pan.<br>Ground outlines and saved plant positions follow the map. House shape, heights, canopy sizes, terrain and photographed feature positions are illustrative. This is not a construction survey.</div>';document.body.append(root);
+ let renderer=null,scene,camera,controls,resizeObserver=null,building=null,frame=0,returnFocus=null,activeZone="WholeGarden",threeLibrary=null,zoneOutline=null;
+ const names={WholeGarden:"Whole garden",ChildrenGarden:"Children’s garden",BigGarden:"Main garden",Bark:"Bark borders",Driveway:"Driveway",PineTrees:"Pine trees",House:"House",ArchwayPath:"Archway path"};
  const message=document.getElementById('garden-3d-message');
- const setView=()=>{if(!camera||!controls)return;camera.position.set(57,37,-22);controls.target.set(18,0,-59);controls.update();};
+ const setView=()=>{
+  if(!camera||!controls)return;
+  let rows=(window.gardenSurveyRows||[]).filter(r=>activeZone==='WholeGarden'||r.polygon===activeZone);
+  if(activeZone==='ArchwayPath')rows=[{x_cm:2450,y_cm:4772},{x_cm:2850,y_cm:5183}];
+  if(!rows.length)return;
+  const xs=rows.map(r=>Number(r.x_cm)/100),ys=rows.map(r=>Number(r.y_cm)/100);
+  const cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
+  const span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys),9);
+  const aspect=Math.max(.4,camera.aspect),distance=span*Math.max(1,1/aspect)*1.35;
+  camera.far=Math.max(250,distance*6);camera.updateProjectionMatrix();controls.maxDistance=Math.max(160,distance*2);
+  camera.position.set(cx+distance*.65,Math.max(12,distance*.7),-cy+distance*.8);controls.target.set(cx,0,-cy);controls.update();
+  if(zoneOutline){scene.remove(zoneOutline);zoneOutline.geometry.dispose();zoneOutline.material.dispose();zoneOutline=null;}
+  if(activeZone!=='WholeGarden'&&activeZone!=='ArchwayPath'&&threeLibrary){
+   const T=threeLibrary;rows.sort((a,b)=>Number(a.point_order)-Number(b.point_order));
+   const points=rows.map(r=>new T.Vector3(Number(r.x_cm)/100,.085,-Number(r.y_cm)/100));
+   zoneOutline=new T.LineLoop(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:'#c89d43'}));scene.add(zoneOutline);
+  }
+ };
+ document.getElementById('garden-3d-zone').onchange=e=>{activeZone=e.target.value;document.getElementById('garden-3d-title').textContent=names[activeZone]||activeZone;setView();};
  function close(){root.hidden=true;cancelAnimationFrame(frame);returnFocus?.focus();}
  document.getElementById('garden-3d-close').onclick=close;document.getElementById('garden-3d-reset').onclick=setView;root.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
  function animate(){if(root.hidden)return;controls.update();renderer.render(scene,camera);frame=requestAnimationFrame(animate);}
  async function build(){
   const [THREE,orbit]=await Promise.all([import('https://esm.sh/three@0.180.0'),import('https://esm.sh/three@0.180.0/examples/jsm/controls/OrbitControls.js')]);
+  threeLibrary=THREE;
   const canvas=document.getElementById('garden-3d-canvas');
   let compatibility=false;
   try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});}
@@ -3931,6 +3951,36 @@ function showPlantRemovalUndo(plant) {
    rows.sort((a,b)=>Number(a.point_order)-Number(b.point_order));const shape=new THREE.Shape();rows.forEach((p,i)=>{const x=Number(p.x_cm)/100,y=Number(p.y_cm)/100;i?shape.lineTo(x,y):shape.moveTo(x,y);});shape.closePath();
    const materials={ChildrenGarden:grass,BigGarden:grass,Bark:bark,Driveway:tarmac,PineTrees:mat('#60754e'),House:concrete};
    const ground=mesh(new THREE.ShapeGeometry(shape),materials[name]||grass,0,.01,0);ground.rotation.x=-Math.PI/2;ground.castShadow=false;
+  }
+  // Simple exterior massing built on the recorded house footprint.
+  // This is a model approximation; the existing 2D house artwork is unchanged.
+  if(groups.House){
+   const shape=new THREE.Shape();groups.House.forEach((p,i)=>i?shape.lineTo(Number(p.x_cm)/100,Number(p.y_cm)/100):shape.moveTo(Number(p.x_cm)/100,Number(p.y_cm)/100));shape.closePath();
+   const walls=mesh(new THREE.ExtrudeGeometry(shape,{depth:2.7,bevelEnabled:false}),mat('#e6e2cf'),0,2.72,0);walls.rotation.x=Math.PI/2;walls.scale.y=-1;
+   const roofMat=mat('#77524b');
+   const pitchedRoof=(x,y,w,d)=>{
+    const points=new Float32Array([-w/2,0,-d/2,w/2,0,-d/2,0,1.6,-d/2,-w/2,0,d/2,w/2,0,d/2,0,1.6,d/2]);
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(points,3));g.setIndex([0,2,1,3,4,5,0,3,5,0,5,2,1,2,5,1,5,4,0,1,4,0,4,3]);g.computeVertexNormals();mesh(g,roofMat,x,2.75,-y);
+   };
+   pitchedRoof(47.5,62.15,19.2,6.7);pitchedRoof(46.25,56.45,5.1,5.3);
+   // Readable window and entrance accents, approximate façade locations.
+   for(const x of [40.5,43,51,54])box(.9,1,.06,mat('#526a68'),x,1.55,-58.76);
+   box(.9,1.9,.07,mat('#506050'),46.3,.95,-54.05);
+  }
+  // Saved plants use their own stored coordinates; forms and heights are estimates.
+  const plantResult=await supabaseClient.from('plants').select('id,common_name,species,plant_type,x_cm,y_cm,status');
+  if(plantResult.error)throw new Error('Plant records could not be loaded. Please check the connection and retry');
+  const canopyGeo=new THREE.IcosahedronGeometry(1,1),trunkMat=mat('#71614a');
+  for(const p of plantResult.data||[]){
+   if((p.status||'Existing').toLowerCase()!=='existing'||!Number.isFinite(Number(p.x_cm))||!Number.isFinite(Number(p.y_cm)))continue;
+   const x=Number(p.x_cm)/100,z=-Number(p.y_cm)/100,name=((p.common_name||'')+' '+(p.species||'')).toLowerCase();
+   const isTree=p.plant_type==='Tree'&&!/shubs|shrubs/.test(name),isConifer=p.plant_type==='Conifer';
+   if(isTree||isConifer){
+    mesh(new THREE.CylinderGeometry(.12,.2,2.4,7),trunkMat,x,1.2,z);
+    if(isConifer)mesh(new THREE.ConeGeometry(1.6,4.5,9),leaf,x,3,z);
+    else{const c=mesh(canopyGeo,/maple/.test(name)?mat('#815368'):leaf,x,3.6,z);c.scale.set(2,2.1,2);}
+   }else if(p.plant_type==='Shrub'||/shubs|shrubs/.test(name)){const c=mesh(canopyGeo,leaf,x,.6,z);c.scale.set(.7,.7,.7);if(/azalea/.test(name))for(let i=0;i<4;i++)mesh(new THREE.SphereGeometry(.09,6,4),mat('#c978ac'),x+Math.sin(i*2)*.4,.9,z+Math.cos(i*2)*.4);}
+   else if(/bluebell/.test(name)){for(let i=0;i<5;i++){const px=x+Math.sin(i*3)*.25,pz=z+Math.cos(i*3)*.25;mesh(new THREE.CylinderGeometry(.015,.02,.35,4),leaf,px,.18,pz);mesh(new THREE.SphereGeometry(.075,5,4),mat('#7976bc'),px,.36,pz);}}
   }
   // Shared tarmac spur and road entrance, without a raised kerb.
   const groundPoly=points=>{const s=new THREE.Shape();points.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();const m=mesh(new THREE.ShapeGeometry(s),tarmac,0,.035,0);m.rotation.x=-Math.PI/2;m.castShadow=false;};
@@ -3965,11 +4015,15 @@ function showPlantRemovalUndo(plant) {
   for(let i=0;i<300&&count<240;i++){const x=((i*7919)%3400)/100,y=49+((i*3571)%2100)/100;if(!inside(x,y))continue;dummy.position.set(x,.11,-y);dummy.rotation.y=i;dummy.updateMatrix();tufts.setMatrixAt(count++,dummy.matrix);}tufts.count=count;if(!compatibility)scene.add(tufts);
   const resize=()=>{const w=root.clientWidth,h=root.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};resizeObserver=new ResizeObserver(resize);resizeObserver.observe(root);resize();setView();
  }
- window.openGarden3D=async()=>{
+ window.openGarden3D=async(zone='WholeGarden')=>{
+  activeZone=zone;const selector=document.getElementById('garden-3d-zone');selector.replaceChildren();
+  for(const id of ['WholeGarden',...new Set((window.gardenSurveyRows||[]).map(r=>r.polygon))]){const option=document.createElement('option');option.value=id;option.textContent=names[id]||id;selector.append(option);}
+  if(zone==='ArchwayPath'){const option=document.createElement('option');option.value=zone;option.textContent=names[zone];selector.append(option);}
+  selector.value=zone;document.getElementById('garden-3d-title').textContent=names[zone]||zone;
   returnFocus=document.activeElement;root.hidden=false;message.textContent='Preparing your 3D garden…';document.getElementById('garden-3d-close').focus();
   try{if(!window.gardenSurveyRows?.length){message.textContent='Load your garden map first, then open the 3D view.';return;}
    if(!renderer){building??=build();await building;}
-   message.textContent='';cancelAnimationFrame(frame);animate();
+   setView();message.textContent='';cancelAnimationFrame(frame);animate();
   }catch(error){message.textContent='3D view could not load: '+error.message+'. You can return to the map and retry.';building=null;if(renderer){renderer.dispose();renderer=null;}}
  };
 })();
