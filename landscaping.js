@@ -125,7 +125,18 @@ if(typeof supabaseClient!=='undefined')supabaseClient.auth.onAuthStateChange((_e
 
 // Seasonal context belongs to the Current map, with recorded jobs as area markers.
 const seasonStyle=document.createElement('style');seasonStyle.textContent=`#garden-season{position:fixed;right:20px;top:163px;z-index:22;padding:11px 15px;background:#fff9eced;border:1px solid #d7c3a2;border-radius:14px;color:#6d4926;font:12px/1.5 Arial;box-shadow:0 4px 16px #71482412}#garden-season strong{display:block;font:20px Georgia,serif}body.garden-autumn .top-bar{background:#fbf3e6}body.garden-autumn #map-container{background-color:#c4b58d}body.garden-autumn .plant-filter-button.active{background:#885937}@media(max-width:700px){#garden-season{top:199px;right:auto;left:12px;padding:8px 12px;font-size:10px}#garden-season strong{font-size:16px}}`;
-document.head.append(seasonStyle);
+seasonStyle.textContent+=`#garden-map{background:transparent}#garden-season{box-shadow:none;border:0;background:#fff9ecdd;padding:7px 11px}#garden-season strong{font-size:16px}#map-container{box-sizing:border-box;padding-top:85px}#garden-map{height:calc(100% - 70px)}@media(max-width:700px){#map-container{padding-top:112px}#garden-map{height:calc(100% - 95px)}#garden-season{top:145px;left:auto;right:12px;padding:5px 8px;font-size:9px}#garden-season strong{font-size:14px}#atlas-controls{top:145px!important}#garden-3d-launch{bottom:153px!important;padding:8px 12px!important;font-size:11px!important}#plant-library-open{bottom:96px!important}}`;
+ gardenMap.setAttribute('preserveAspectRatio','xMidYMin meet');
+ const closerView='-120 0 6000 7280';
+ gardenMap.setAttribute('viewBox',closerView);
+ document.getElementById('atlas-fit')?.addEventListener('click',()=>gardenMap.setAttribute('viewBox',closerView));
+ // Keep secondary tools available in one compact menu instead of floating buttons.
+ const more=document.createElement('details');more.id='garden-tools';more.innerHTML='<summary>Garden tools</summary>';
+ document.getElementById('atlas-controls')?.append(more);
+ for(const id of ['photo-survey-open','garden-3d-launch']){const tool=document.getElementById(id);if(tool){more.append(tool);tool.addEventListener('click',()=>{more.open=false;});}}
+ seasonStyle.textContent+=`#garden-tools{position:relative}#garden-tools summary{cursor:pointer;padding:8px;font:12px Arial}#garden-tools[open]{background:#fffdf5;border-radius:14px;padding:4px;box-shadow:0 6px 20px #25452c20}#garden-tools #photo-survey-open,#garden-tools #garden-3d-launch{position:static!important;display:block!important;white-space:nowrap;margin:5px;box-shadow:none!important;font-size:12px!important;padding:10px!important}`;
+
+ document.head.append(seasonStyle);
 const seasonBadge=document.createElement('div');seasonBadge.id='garden-season';document.body.append(seasonBadge);
 function refreshSeasonMap(){
  const season=gardenSeason(),isCurrent=plantViewFilter==='current';
@@ -136,16 +147,38 @@ function refreshSeasonMap(){
  const ns='http://www.w3.org/2000/svg',group=document.createElementNS(ns,'g');group.id='current-season-jobs';layer.append(group);
  const make=(tag,attrs,parent=group)=>{const e=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;};
  if(season.name==='Autumn')make('rect',{x:-350,y:0,width:6700,height:7250,fill:'#dd8a33',opacity:.065,'pointer-events':'none'});
- const positions={'Driveway':[2250,3800],'Bark borders':[550,3300],'Main garden / lawn':[3950,2200]};
- for(const [zone,[x,y]]of Object.entries(positions)){
-  const jobs=currentJobs().filter(j=>j.zone===zone);if(!jobs.length)continue;
-  const marker=make('g',{transform:`translate(${x} ${7000-y})`,role:'button',tabindex:0,'aria-label':zone+': '+jobs.length+' open jobs',style:'cursor:pointer'});
-  const title=make('title',{},marker);title.textContent=zone+': '+jobs.map(j=>j.title).join('; ');
-  make('circle',{r:82,fill:'#a15e30',stroke:'#fff5dc','stroke-width':12},marker);
-  const count=make('text',{'text-anchor':'middle','dominant-baseline':'central','font-family':'Arial','font-size':83,fill:'#fff8e4','pointer-events':'none'},marker);count.textContent=jobs.length;
-  const label=make('text',{y:145,'text-anchor':'middle','font-family':'Arial','font-size':60,fill:'#5e3b22','paint-order':'stroke',stroke:'#fff6df','stroke-width':8,'pointer-events':'none'},marker);label.textContent=zone;
-  const show=e=>{e.preventDefault();e.stopPropagation();selected=null;open('jobs');};marker.addEventListener('click',show);marker.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')show(e);});
+ // Reusable SVG symbols are clipped to surveyed zones, never to estimated rectangles.
+ const defs=make('defs',{});
+ const symbol=(id,body)=>{const e=make('symbol',{id:'work-art-'+id,viewBox:'0 0 120 120'},defs);e.innerHTML=body;};
+ symbol('grass','<path d="M15 106Q22 63 9 36Q42 57 42 102Q43 44 61 12Q69 55 59 105Q81 55 105 45Q86 74 85 108Z" fill="#64874a"/><path d="M39 106Q33 68 39 43M59 105Q68 63 83 36" fill="none" stroke="#a5af60" stroke-width="5" stroke-linecap="round"/>');
+ symbol('weed','<path d="M60 109V32M60 78L32 59M60 62L86 44" stroke="#426744" stroke-width="6" fill="none"/><path d="M58 84L34 86L40 76L22 71L37 65L27 53L49 59ZM62 66L87 69L79 58L99 51L84 47L94 35L72 42Z" fill="#4a794c"/><path d="M47 31L43 18L54 22L60 9L66 22L78 17L73 34Z" fill="#98729a"/><ellipse cx="60" cy="34" rx="17" ry="10" fill="#677b48"/>');
+ symbol('sticks','<path d="M17 92L99 30M56 62L53 31M76 48L102 51M26 35L92 96M57 65L79 62" fill="none" stroke="#594836" stroke-width="9" stroke-linecap="round"/><path d="M18 89L97 29M28 34L90 93" fill="none" stroke="#a18a67" stroke-width="3" stroke-linecap="round"/>');
+ symbol('leaf','<path d="M25 92Q9 38 93 17Q105 93 25 92Z" fill="#bc793e"/><path d="M17 106L81 33M36 83L32 59M51 65L77 68" fill="none" stroke="#795732" stroke-width="5" stroke-linecap="round"/>');
+ symbol('moss','<path d="M8 75Q-2 52 21 44Q13 18 41 26Q55 7 72 30Q97 14 102 44Q124 48 110 73Q117 102 86 99Q64 117 47 99Q15 115 8 75Z" fill="#6b8050"/><g fill="#97a267"><circle cx="29" cy="55" r="12"/><circle cx="62" cy="43" r="14"/><circle cx="84" cy="71" r="17"/><circle cx="46" cy="84" r="14"/></g>');
+ const jobs=currentJobs();
+ const specs=[
+  {key:'drive-leaves',zone:'Driveway',art:'leaf',size:95,step:210,opacity:.92},
+  {key:'drive-moss',zone:'Driveway',art:'moss',size:210,step:440,opacity:.68},
+  {key:'bark-sticks',zone:'Bark',art:'sticks',size:140,step:340,opacity:.9},
+  {key:'bark-weeds',zone:'Bark',art:'weed',size:150,step:460,opacity:.93},
+  {key:'lawn-long',zone:'BigGarden',art:'grass',size:180,step:230,opacity:.8},
+  {key:'lawn-weeds',zone:'BigGarden',art:'weed',size:190,step:560,opacity:.95}
+ ];
+ for(const [index,spec] of specs.entries()){
+  const job=jobs.find(j=>j.id.endsWith('-'+spec.key));if(!job)continue;
+  const polygon=gardenMap.querySelector('.map-polygon[data-polygon="'+spec.zone+'"]');if(!polygon)continue;
+  const clipId='job-zone-'+index,clip=make('clipPath',{id:clipId},defs);make('polygon',{points:polygon.getAttribute('points')},clip);
+  const art=make('g',{'clip-path':'url(#'+clipId+')',opacity:spec.opacity,'pointer-events':'none','data-job-art':spec.key,role:'img','aria-label':job.title});
+  make('title',{},art).textContent=job.title+' — not completed';
+  const points=polygon.getAttribute('points').trim().split(/\s+/).map(p=>p.split(',').map(Number));
+  const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+  let row=0;
+  for(let y=Math.min(...ys);y<Math.max(...ys);y+=spec.step){row++;let col=0;for(let x=Math.min(...xs);x<Math.max(...xs);x+=spec.step){col++;
+   const jitter=((row*37+col*19+index*11)%81)-40,px=x+(row%2)*spec.step/2+jitter,py=y+((col*29)%67),angle=spec.art==='grass'||spec.art==='weed'?jitter/5:jitter;
+   make('use',{href:'#work-art-'+spec.art,x:px,y:py,width:spec.size,height:spec.size,transform:'rotate('+angle+' '+(px+spec.size/2)+' '+(py+spec.size/2)+')'},art);
+  }}
  }
+
 }
 // Watch only map rebuilds; updates inside the seasonal overlay do not recurse.
 const seasonObserver=new MutationObserver(records=>{if(records.some(r=>r.target===gardenMap||r.target.id==='overlay-layer')&&!gardenMap.querySelector('#current-season-jobs'))refreshSeasonMap();});
