@@ -8,21 +8,32 @@ const money = n => new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR
 let owner = 'guest', state = {jobs:[],projects:[],notes:[]}, selected = null, tab = 'overview', forecast = null;
 const key = () => 'gardendex.landscaping.v1.' + owner;
 function read() { try { const raw = JSON.parse(localStorage.getItem(key()) || '{}'); state = {jobs:Array.isArray(raw.jobs)?raw.jobs:[],projects:Array.isArray(raw.projects)?raw.projects:[],notes:Array.isArray(raw.notes)?raw.notes:[]}; } catch { state = {jobs:[],projects:[],notes:[]}; } seedCurrentJobs(); }
-function save() { try { localStorage.setItem(key(),JSON.stringify(state)); return true; } catch { alert('Your browser could not save this change. Export a backup before closing.'); return false; } }
+function save() { try { localStorage.setItem(key(),JSON.stringify(state)); queueMicrotask(()=>{if(typeof refreshSeasonMap==='function')refreshSeasonMap();}); return true; } catch { alert('Your browser could not save this change. Export a backup before closing.'); return false; } }
+function gardenSeason(date=new Date()){
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Dublin',year:'numeric',month:'numeric'}).formatToParts(date);
+ const month=Number(parts.find(p=>p.type==='month').value),year=Number(parts.find(p=>p.type==='year').value);
+ return {name:month>=3&&month<=5?'Spring':month>=6&&month<=8?'Summer':month>=9&&month<=11?'Autumn':'Winter',year};
+}
 function seedCurrentJobs(){
- const marker=key()+'.current-work-20261111';
- try{if(localStorage.getItem(marker))return;}catch{return;}
+ const {name,year}=gardenSeason();if(name!=='Autumn')return;
  const jobs=[
  ['drive-leaves','Clear fallen leaves from driveway','Driveway','High'],
- ['drive-moss','Remove moss from tarmac driveway','Driveway','High'],
+ ['drive-moss','Check and remove moss from tarmac driveway','Driveway','High'],
  ['bark-sticks','Collect sticks and fallen branches','Bark borders','Normal'],
- ['bark-weeds','Control weeds in bark borders','Bark borders','Normal'],
- ['lawn-long','Cut back overgrown grass with suitable equipment','Main garden / lawn','High'],
- ['lawn-weeds','Identify and control lawn weeds, including nettles and thistles','Main garden / lawn','Normal']
- ];
- for(const [id,title,zone,priority] of jobs)if(!state.jobs.some(j=>j.id==='reported-'+id))state.jobs.push({id:'reported-'+id,title,zone,priority,date:'',plantId:null,done:false,source:'Reported by owner, 11 November 2026'});
- if(save())try{localStorage.setItem(marker,'1');}catch{}
+ ['bark-weeds','Check and control weeds in bark borders','Bark borders','Normal'],
+ ['lawn-long','Check overgrown grass and cut when ground conditions permit','Main garden / lawn','High'],
+ ['lawn-weeds','Check and control lawn weeds, including nettles and thistles','Main garden / lawn','Normal']
+ ];let changed=false;
+ for(const [id,title,zone,priority] of jobs){
+  const taskId='autumn-'+year+'-'+id;
+  if(state.jobs.some(j=>j.id===taskId))continue;
+  const legacy=year===2026?state.jobs.find(j=>j.id==='reported-'+id):null;
+  if(legacy){Object.assign(legacy,{id:taskId,season:'Autumn',seasonYear:year,recurring:true});}
+  else state.jobs.push({id:taskId,title,zone,priority,date:'',plantId:null,done:false,season:'Autumn',seasonYear:year,recurring:true,source:'Annual autumn checklist; check actual conditions before work'});
+  changed=true;
+ }if(changed)save();
 }
+function currentJobs(){const season=gardenSeason();return state.jobs.filter(j=>!j.done&&(!j.recurring||(j.season===season.name&&j.seasonYear===season.year)));}
 const style = document.createElement('style');
 style.textContent = `
 #plant-panel:not(.hidden),#add-plant-panel:not(.hidden){animation:ld-panel-in 260ms cubic-bezier(.22,.61,.36,1)}
@@ -63,7 +74,7 @@ async function closeWorkspace() {
 reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)screenAnimation?.cancel();});
 launch.onclick=()=>open();loginLink.onclick=()=>open();
 function render(){
-const openJobs=state.jobs.filter(j=>!j.done), planned=state.projects.reduce((n,p)=>n+Number(p.budget||0),0), spent=state.projects.reduce((n,p)=>n+Number(p.spent||0),0);
+const openJobs=currentJobs(), planned=state.projects.reduce((n,p)=>n+Number(p.budget||0),0), spent=state.projects.reduce((n,p)=>n+Number(p.spent||0),0);
 root.innerHTML=`<header><div><small>GARDENDEX / HOGAN GARDEN</small><h1 tabindex="-1">Your landscaping companion</h1><span style="color:#cfdbc5">Plan the space. Care for what grows.</span></div><button id="ld-close">Back to garden</button></header><div class="ld-wrap"><nav aria-label="Landscaping workspace">${[['overview','Today'],['jobs','Jobs & care'],['projects','Projects'],['materials','Materials'],['backup','Backup']].map(([id,name])=>`<button data-tab="${id}" aria-selected="${tab===id}">${name}</button>`).join('')}</nav><div id="ld-content"></div><footer class="ld-muted">${owner==='guest'?'Guest workspace':'Signed-in workspace'} · Jobs, budgets and notes save in this browser only. Plant records stay in your existing garden database. Export a backup to move this workspace to another device.</footer></div>`;
 $('ld-close').onclick=closeWorkspace;root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
 const content=$('ld-content');
@@ -74,7 +85,7 @@ if(tab!==previousTab) {
 }
 previousTab=tab;
 if(tab==='overview'){
-content.innerHTML=`<div class="ld-grid"><div><div class="ld-card"><span class="ld-tag">YOUR NEXT STEPS</span><h2>A garden with a plan.</h2><p>Keep the big garden, driveway, children’s garden and planting areas moving forward, one job at a time.</p><div class="ld-actions"><button class="primary" data-go="jobs">+ Plan a job</button><button data-go="projects">Create a project</button></div></div><div class="ld-card"><h3>Current garden work</h3><div class="ld-big">${openJobs.length} open jobs</div><p class="ld-muted">${state.jobs.filter(j=>j.done).length} completed · ${openJobs.filter(j=>j.date && j.date<today()).length} overdue</p>${openJobs.length?[...new Set(openJobs.map(j=>j.zone))].map(zone=>`<h3 class="ld-section">${esc(zone)}</h3>${openJobs.filter(j=>j.zone===zone).map(j=>`<div class="ld-row"><input class="ld-check" type="checkbox" data-current-job="${esc(j.id)}" aria-label="Complete ${esc(j.title)}"><div style="flex:1"><strong>${esc(j.title)}</strong><br><small>${esc(j.priority)} priority · ${esc(j.date||'Not scheduled')}</small></div></div>`).join('')}`).join(''):'<p>No open jobs. Add a new job when something needs attention.</p>'}<p class="ld-muted">Current work reported by you. Check Jobs & care for completed tasks.</p></div></div><div><div class="ld-card"><h3>Galway weather & work window</h3><div id="ld-forecast" aria-live="polite">${forecast?weatherHTML():'Load the forecast to check rain, frost and wind before outdoor work.'}</div><button id="ld-weather-refresh">${forecast?'Refresh':'Load forecast'}</button><p class="ld-muted">Galway city forecast; your garden’s conditions may differ. <a href="https://open-meteo.com/" target="_blank" rel="noopener">Weather by Open-Meteo</a></p></div><div class="ld-card"><h3>Project budget</h3><div class="ld-big">${money(planned)}</div><p>${money(spent)} recorded spend · ${money(planned-spent)} remaining</p><button data-go="materials">Calculate bark, soil or gravel →</button></div></div></div>`;
+content.innerHTML=`<div class="ld-grid"><div><div class="ld-card"><span class="ld-tag">YOUR NEXT STEPS</span><h2>A garden with a plan.</h2><p>Keep the big garden, driveway, children’s garden and planting areas moving forward, one job at a time.</p><div class="ld-actions"><button class="primary" data-go="jobs">+ Plan a job</button><button data-go="projects">Create a project</button></div></div><div class="ld-card"><h3>Current garden work · ${gardenSeason().name} ${gardenSeason().year}</h3><div class="ld-big">${openJobs.length} open jobs</div><p class="ld-muted">${state.jobs.filter(j=>j.done).length} completed · ${openJobs.filter(j=>j.date && j.date<today()).length} overdue</p>${openJobs.length?[...new Set(openJobs.map(j=>j.zone))].map(zone=>`<h3 class="ld-section">${esc(zone)}</h3>${openJobs.filter(j=>j.zone===zone).map(j=>`<div class="ld-row"><input class="ld-check" type="checkbox" data-current-job="${esc(j.id)}" aria-label="Complete ${esc(j.title)}"><div style="flex:1"><strong>${esc(j.title)}</strong><br><small>${esc(j.priority)} priority · ${esc(j.date||'Not scheduled')}</small></div></div>`).join('')}`).join(''):'<p>No open jobs. Add a new job when something needs attention.</p>'}<p class="ld-muted">Autumn jobs return as a fresh checklist each year when you open GardenDex. Earlier completion records stay in Jobs & care. Grass, weeds and moss can also need attention in other seasons.</p></div></div><div><div class="ld-card"><h3>Galway weather & work window</h3><div id="ld-forecast" aria-live="polite">${forecast?weatherHTML():'Load the forecast to check rain, frost and wind before outdoor work.'}</div><button id="ld-weather-refresh">${forecast?'Refresh':'Load forecast'}</button><p class="ld-muted">Galway city forecast; your garden’s conditions may differ. <a href="https://open-meteo.com/" target="_blank" rel="noopener">Weather by Open-Meteo</a></p></div><div class="ld-card"><h3>Project budget</h3><div class="ld-big">${money(planned)}</div><p>${money(spent)} recorded spend · ${money(planned-spent)} remaining</p><button data-go="materials">Calculate bark, soil or gravel →</button></div></div></div>`;
 $('ld-weather-refresh').onclick=loadWeather;
 }
 if(tab==='jobs'){
@@ -98,7 +109,7 @@ content.innerHTML=`<div class="ld-card"><h2>Keep your plans safe</h2><p>Download
 $('ld-export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({app:'GardenDex',version:1,...state},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='GardenDex-workspace-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('ld-import-button').onclick=()=>$('ld-import').click();$('ld-import').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>5e6)throw Error('Backup is too large.');const data=JSON.parse(await file.text());if(data.app!=='GardenDex'||data.version!==1||!['jobs','projects','notes'].every(k=>Array.isArray(data[k]))||!data.jobs.every(j=>typeof j.id==='string'&&typeof j.title==='string'&&typeof j.zone==='string'&&typeof j.done==='boolean')||!data.projects.every(p=>typeof p.id==='string'&&typeof p.title==='string'&&typeof p.zone==='string'&&Number.isFinite(p.budget)&&p.budget>=0&&Number.isFinite(p.spent)&&p.spent>=0)||!data.notes.every(n=>typeof n.plantId==='string'&&typeof n.text==='string'&&typeof n.date==='string'))throw Error('This is not a valid GardenDex workspace backup.');if(!confirm('Replace this browser’s jobs, projects and notes with this backup?'))return;state={jobs:data.jobs,projects:data.projects,notes:data.notes};save();$('ld-import-message').textContent='Backup imported.';}catch(err){$('ld-import-message').textContent=err.message;}};
 }
-root.querySelectorAll('[data-current-job]').forEach(el=>el.onchange=()=>{state.jobs.find(j=>j.id===el.dataset.currentJob).done=el.checked;save();render();});
+root.querySelectorAll('[data-current-job]').forEach(el=>el.onchange=()=>{state.jobs.find(j=>j.id===el.dataset.currentJob).done=el.checked;save();render();refreshSeasonMap();});
 root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{tab=b.dataset.go;render();});
 }
 function weatherHTML(){const d=forecast.daily;return `<div class="ld-weather">${d.time.slice(0,3).map((date,i)=>`<div><strong>${new Date(date+'T12:00:00').toLocaleDateString('en-IE',{weekday:'short',day:'numeric'})}</strong><br>${d.temperature_2m_min[i]}–${d.temperature_2m_max[i]}°C<br>${d.precipitation_sum[i]} mm rain<br>Gusts ${d.wind_gusts_10m_max[i]} km/h</div>`).join('')}</div><div class="ld-alert">${d.temperature_2m_min[0]<=2?'Possible frost: check tender plants and avoid working frozen ground. ':''}${d.wind_gusts_10m_max[0]>=50?'Strong gusts: secure loose materials and postpone exposed work. ':''}${d.precipitation_sum[0]>=5?'Rain expected: check soil before watering; avoid compacting saturated ground. ':'Lower rainfall forecast: check soil moisture around new planting before watering.'}</div><p class="ld-muted">Loaded ${esc(forecast.loaded)} · Guidance uses simple forecast thresholds.</p>`;}
@@ -111,4 +122,35 @@ $('log-work').onclick=()=>{if(!selected)return;const note=prompt('What work did 
 root.addEventListener('keydown',e=>{if(e.key==='Escape'){$('ld-close').click();}});
 read();
 if(typeof supabaseClient!=='undefined')supabaseClient.auth.onAuthStateChange((_event,session)=>{const next=session?.user?.id||'guest';if(next!==owner){owner=next;selected=null;read();if(!root.hidden)render();}});
+
+// Seasonal context belongs to the Current map, with recorded jobs as area markers.
+const seasonStyle=document.createElement('style');seasonStyle.textContent=`#garden-season{position:fixed;right:20px;top:163px;z-index:22;padding:11px 15px;background:#fff9eced;border:1px solid #d7c3a2;border-radius:14px;color:#6d4926;font:12px/1.5 Arial;box-shadow:0 4px 16px #71482412}#garden-season strong{display:block;font:20px Georgia,serif}body.garden-autumn .top-bar{background:#fbf3e6}body.garden-autumn #map-container{background-color:#c4b58d}body.garden-autumn .plant-filter-button.active{background:#885937}@media(max-width:700px){#garden-season{top:199px;right:auto;left:12px;padding:8px 12px;font-size:10px}#garden-season strong{font-size:16px}}`;
+document.head.append(seasonStyle);
+const seasonBadge=document.createElement('div');seasonBadge.id='garden-season';document.body.append(seasonBadge);
+function refreshSeasonMap(){
+ const season=gardenSeason(),isCurrent=plantViewFilter==='current';
+ seasonBadge.hidden=!isCurrent;document.body.classList.toggle('garden-autumn',isCurrent&&season.name==='Autumn');
+ seasonBadge.replaceChildren();const heading=document.createElement('strong');heading.textContent=season.name+' '+season.year;seasonBadge.append(heading,document.createTextNode(new Date().toLocaleDateString('en-IE',{timeZone:'Europe/Dublin',weekday:'short',day:'numeric',month:'long'})));
+ gardenMap.querySelector('#current-season-jobs')?.remove();if(!isCurrent)return;
+ const layer=gardenMap.querySelector('#overlay-layer');if(!layer)return;
+ const ns='http://www.w3.org/2000/svg',group=document.createElementNS(ns,'g');group.id='current-season-jobs';layer.append(group);
+ const make=(tag,attrs,parent=group)=>{const e=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;};
+ if(season.name==='Autumn')make('rect',{x:-350,y:0,width:6700,height:7250,fill:'#dd8a33',opacity:.065,'pointer-events':'none'});
+ const positions={'Driveway':[2250,3800],'Bark borders':[550,3300],'Main garden / lawn':[3950,2200]};
+ for(const [zone,[x,y]]of Object.entries(positions)){
+  const jobs=currentJobs().filter(j=>j.zone===zone);if(!jobs.length)continue;
+  const marker=make('g',{transform:`translate(${x} ${7000-y})`,role:'button',tabindex:0,'aria-label':zone+': '+jobs.length+' open jobs',style:'cursor:pointer'});
+  const title=make('title',{},marker);title.textContent=zone+': '+jobs.map(j=>j.title).join('; ');
+  make('circle',{r:82,fill:'#a15e30',stroke:'#fff5dc','stroke-width':12},marker);
+  const count=make('text',{'text-anchor':'middle','dominant-baseline':'central','font-family':'Arial','font-size':83,fill:'#fff8e4','pointer-events':'none'},marker);count.textContent=jobs.length;
+  const label=make('text',{y:145,'text-anchor':'middle','font-family':'Arial','font-size':60,fill:'#5e3b22','paint-order':'stroke',stroke:'#fff6df','stroke-width':8,'pointer-events':'none'},marker);label.textContent=zone;
+  const show=e=>{e.preventDefault();e.stopPropagation();selected=null;open('jobs');};marker.addEventListener('click',show);marker.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')show(e);});
+ }
+}
+// Watch only map rebuilds; updates inside the seasonal overlay do not recurse.
+const seasonObserver=new MutationObserver(records=>{if(records.some(r=>r.target===gardenMap||r.target.id==='overlay-layer')&&!gardenMap.querySelector('#current-season-jobs'))refreshSeasonMap();});
+seasonObserver.observe(gardenMap,{childList:true,subtree:true});
+document.querySelectorAll('.plant-filter-button').forEach(b=>b.addEventListener('click',()=>queueMicrotask(refreshSeasonMap)));
+refreshSeasonMap();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){seedCurrentJobs();refreshSeasonMap();if(!root.hidden)render();}});
 })();
