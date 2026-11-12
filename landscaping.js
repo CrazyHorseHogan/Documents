@@ -33,6 +33,7 @@ function seedCurrentJobs(){
   changed=true;
  }if(changed)save();
 }
+window.gardenDexWorkspace={open:next=>open(next),summary:()=>({owner,jobs:currentJobs().map(j=>({...j})),projects:state.projects.map(p=>({...p}))}),complete:id=>{const job=state.jobs.find(j=>j.id===id);if(job){job.done=true;save();}}};
 function currentJobs(){const season=gardenSeason();return state.jobs.filter(j=>!j.done&&(!j.recurring||(j.season===season.name&&j.seasonYear===season.year)));}
 const style = document.createElement('style');
 style.textContent = `
