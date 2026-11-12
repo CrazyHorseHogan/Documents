@@ -1252,3 +1252,6 @@ main {
 }
 /* GardenDex illustrated growth cards */
 .pc-detail .pc-info{position:relative;border-radius:32px 32px 0 0;background:#fff;margin-top:-14px}.pc-evolutions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pc-evolutions article{display:flex;flex-direction:column;align-items:center;background:#f7f8f2;border-radius:18px;padding:12px;text-align:center}.pc-evolutions img{width:100%;height:130px;object-fit:contain}.pc-evolutions small{color:#718071}.pc-tabs{flex-wrap:wrap}#profile-dex-card{padding:12px 18px;border:0;border-radius:22px;background:#315d45;color:white;margin:12px}
+
+/* Keep the map illustration clear; names remain in navigation and profiles. */
+#garden-map #atlas-labels { display: none; }
