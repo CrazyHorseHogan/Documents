@@ -4046,7 +4046,12 @@ function showPlantRemovalUndo(plant) {
  ];
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function artwork(p){
-  if(p.id==='beech'||p.id==='bluebell')return `assets/evolutions/${p.id}-0-${p.id==='beech'?2:3}.png`;
+  // Library portraits use the same simple vector style as the rose cards.
+  // Realistic growth and overhead assets remain available separately.
+  if(p.id==='beech'){
+   const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220"><ellipse cx="100" cy="202" rx="53" ry="9" fill="#173d30" opacity=".12"/><path d="M88 199L94 112H108L114 199Z" fill="#9b9985"/><path d="M100 150L67 111M101 135L133 97" stroke="#9b9985" stroke-width="9" stroke-linecap="round"/><path d="M44 133C19 119 26 88 43 80C33 58 56 37 77 41C86 16 122 18 134 40C161 35 179 58 165 81C188 98 175 132 153 135C140 158 116 154 100 146C78 162 51 153 44 133Z" fill="#4c7848"/><path d="M43 85C32 65 55 44 77 48C85 28 117 27 128 46C151 42 167 58 158 77C139 87 128 77 111 82C88 101 64 88 43 85Z" fill="#7da35b"/><path d="M56 120C70 129 83 127 92 120M118 108C133 116 145 113 153 106" fill="none" stroke="#648e50" stroke-width="8" stroke-linecap="round"/></svg>';
+   return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  }
   const existing=getBotanicalPlantArtwork({common_name:p.art});if(existing)return existing.image;
   const birch=p.art==='birch';let leaves='';
   for(let i=0;i<23;i++){const a=i*2.4,r=20+(i%5)*9,x=100+Math.cos(a)*r,y=90+Math.sin(a)*r;leaves+=`<ellipse cx="${x}" cy="${y}" rx="${birch?19:23}" ry="${birch?24:18}" fill="${['#37634d','#568260','#83a46c'][i%3]}"/>`;}
