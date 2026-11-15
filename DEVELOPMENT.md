@@ -51,3 +51,15 @@ Implemented:
 Validation: syntax checks on changed JS; map-navigation, zone-storage and new design-pack bridge regressions pass; git diff --check. Real browser guest preview opened using managed sites-preview / cloud browser. Visually inspected design collection and navigated all five sections; saving a guest site brief showed “Site brief saved.” No authenticated garden, live Supabase, device/Safari, feature-positioning or print/download end-to-end verification. Local preview setup is ignored and not part of the commit.
 
 Remaining limits / next work: live supplier price scanning has no connected pricing service; rates are explicitly manual. Illustrative starter spacing is not verified mature spread; plant-by-plant suitability/hazards and nursery availability need authoritative checks. Native flag is a preference filter, not a full site recommendation engine. Family-use flag is recorded, not an automatic toxicity exclusion. Small-border templates are coordinated palettes placed group-by-group, not automatic fit-to-bed layouts. General seasonal text is not per-species recurring scheduling. Actual survey dimensions remain unverified against authorized Supabase records. Proposed features remain browser-local and shared within the current workspace, not separate per design idea or cloud-synced. Add richer landscape imagery only as clearly separated concepts. Keep 3D deferred. No merge/deployment/database changes.
+
+## 2026-11-15 — Reduce screen density; follow the PDF's information hierarchy
+
+User said the live screen contained too much and asked to take information from the PDF for the app layout. Visually reviewed PDF pages 5 and 8: clear teal heading, dominant garden/planting plan, compact numbered key and separate plant information. Applied that hierarchy rather than adding another dashboard.
+
+- Home: shorter heading, one main map action; vision edits and other ideas collapsed. Legacy Plan checklist/notes collapsed.
+- Studio: removed large promotional masthead and five-button tab bar. Compact section selector with Back/Next; one chosen style shown at a time; print/map controls and source/storage notes tucked into details.
+- Added a separate Garden Plan page with a large recorded map and compact numbered key. Planting Plan leads with the map/key; palette selection and supplied-size tables expand on demand. White space, teal headings/rules and muted pink numbered markers reflect the reference without copying illustrations.
+- Map: dimensions off initially; reduced duplicate Fit/season controls; tools hidden under Add to this zone and Manage design. Budget and guide remain in Manage design.
+- Existing data, pricing and storage behavior retained. Actual signed-in survey/Supabase and phone checks remain required.
+
+Validation: JS syntax checks, existing map-navigation, zone-storage and design-pack bridge suites, and git diff --check passed. User's earlier instruction to make it live applies to this layout correction.
