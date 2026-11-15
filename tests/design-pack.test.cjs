@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const {fixture,guestKey}=require('./zone-storage.test.cjs');
+const seed={features:[{id:'bench',type:'furniture',zone:'BigGarden',count:1,name:'Bench',price:150,labour:20,points:[{x:0,y:0}]}],conditions:{BigGarden:{style:'formal'}},allowances:{delivery:30},other:{retained:true}};
+const f=fixture(JSON.stringify(seed));
+const snapshot=f.api.snapshot();snapshot.features[0].name='Must not leak';assert.equal(f.api.snapshot().features[0].name,'Bench');
+f.api.update(d=>{d.conditions.BigGarden.light='Shade';d.features[0].potSize='120 cm wide';});
+const saved=JSON.parse(f.values.get(guestKey));assert.equal(saved.other.retained,true);assert.equal(saved.features[0].potSize,'120 cm wide');assert.equal(saved.conditions.BigGarden.style,'formal');assert.equal(saved.allowances.delivery,30);
+assert.equal(f.api.quantity(saved.features[0]),1);assert.equal(f.api.unit(saved.features[0]),'items');assert.equal(f.api.cost(saved.features[0]),170);
+const broken=fixture('{broken');assert.throws(()=>broken.api.snapshot(),/could not be read/);assert.throws(()=>broken.api.update(d=>d.features.push({})),/could not be read/);assert.equal(broken.values.get(guestKey),'{broken');
+f.failWrite(true);assert.throws(()=>f.api.update(d=>{d.conditions.BigGarden.style='woodland';}),/could not be saved/);assert.equal(JSON.parse(f.values.get(guestKey)).conditions.BigGarden.style,'formal');
+console.log('Design-pack bridge passed: snapshot isolation, site/spec persistence, furniture quantities/costs, failed reads and writes.');
