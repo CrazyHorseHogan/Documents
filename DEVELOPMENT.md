@@ -33,3 +33,21 @@ Validation run: `node --check` on all app JavaScript files and both test files; 
 Blocked/unavailable: Chromium/Playwright could not launch (`process_singleton_posix.cc:297`, `socket() failed: Operation not permitted`). No visual, phone, Safari or live Supabase verification was performed. The earlier device interaction checklist remains required before merge. Storage UI checklist: corrupt a test-only guest zone record; confirm the recovery notice, blocked budget/save/export and unchanged raw value; restore that fixture and Retry loading; confirm the original features return. Never corrupt an actual user plan for testing.
 
 Next priority: real-device navigation/zone-selection checks, then audit the remaining browser-local stores and authenticated garden load failures. Verify dimensions only from actual stored survey measurements using authorized Supabase access. Do not invent missing measurements, merge or deploy.
+
+## 2026-11-15 — Dream Gardens design-pack direction
+
+User explicitly approved Oliver Schurmann’s Bord Bia Bloom Easy Care Garden PDF as the product and visual reference, and asked to implement the features and design style. Continued draft PR #1 on the existing branch.
+
+Implemented:
+- Original cream-paper, botanical-green editorial design studio, accessible from Home, Plan and zone tools; four distinct style directions with original schematic illustrations (not finished garden renders).
+- Per-zone saved site briefs: light, drainage, exposure, aspect, pH notes, survey provenance, native preference and family-use flag. Recorded conditions produce palette mismatch/unknown notices; native preference filters starter entries. No claim of validated horticultural matching.
+- Coordinated starter palettes, placement of each selected plant group through the existing editor, labelled saved-feature map/list, supplied pot-size/specification entries, source references and quantities. Existing geometry and garden records remain unchanged.
+- Zone shopping/cost view linked to the same saved features; quote-edit handoff, CSV shopping-list export, whole-garden budget link. Print combines all five design-pack sections using browser Print/Save as PDF.
+- Furniture/planter item placement, unit pricing and moving saved features by tapping a new first-point position. Existing deletion/copy/mirror tools retained.
+- Persistent staged work checklist and general seasonal guidance linked to existing jobs.
+- Narrow zone-designer API to preserve owner isolation, failed-read/write protections and extra document fields.
+- Updated the existing daily automation brief with this approved direction and explicit remaining priorities.
+
+Validation: syntax checks on changed JS; map-navigation, zone-storage and new design-pack bridge regressions pass; git diff --check. Real browser guest preview opened using managed sites-preview / cloud browser. Visually inspected design collection and navigated all five sections; saving a guest site brief showed “Site brief saved.” No authenticated garden, live Supabase, device/Safari, feature-positioning or print/download end-to-end verification. Local preview setup is ignored and not part of the commit.
+
+Remaining limits / next work: live supplier price scanning has no connected pricing service; rates are explicitly manual. Illustrative starter spacing is not verified mature spread; plant-by-plant suitability/hazards and nursery availability need authoritative checks. Native flag is a preference filter, not a full site recommendation engine. Family-use flag is recorded, not an automatic toxicity exclusion. Small-border templates are coordinated palettes placed group-by-group, not automatic fit-to-bed layouts. General seasonal text is not per-species recurring scheduling. Actual survey dimensions remain unverified against authorized Supabase records. Proposed features remain browser-local and shared within the current workspace, not separate per design idea or cloud-synced. Add richer landscape imagery only as clearly separated concepts. Keep 3D deferred. No merge/deployment/database changes.

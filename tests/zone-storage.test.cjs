@@ -30,18 +30,18 @@ function fixture(raw) {
  const body = new Element(); body.dataset = {gdView:'home'};
  const context = {
   document: {body,createElement:()=>new Element(),getElementById:id=>nodes.get(id),querySelector:()=>null},
-  window: {gardenDexWorkspace:{summary:()=>({owner})}},
+  window: {dispatchEvent(){},gardenDexWorkspace:{summary:()=>({owner})}},
   localStorage: {
    getItem(key) {if (readFails || readFailures-- > 0) throw Error('Read unavailable'); return values.get(key) ?? null;},
    setItem(key, value) {if (writeFails) throw Error('Quota exceeded'); writes++; values.set(key,value);}
   },
   Blob, URL:{createObjectURL(blob){downloads.push(blob);return 'blob:test';},revokeObjectURL(){}},
   setTimeout:()=>1,clearTimeout(){},MutationObserver:class {observe(){}},
-  Intl, crypto:require('node:crypto').webcrypto
+  Intl, Event, crypto:require('node:crypto').webcrypto
  };
  vm.runInNewContext(source,context);
  return {
-  values, nodes, downloads, get writes(){return writes;},
+  api:context.window.gardenDexZoneDesigner,values, nodes, downloads, get writes(){return writes;},
   owner(value){owner=value;}, failNextReads(count){readFailures=count;}, failRead(value){readFails=value;}, failWrite(value){writeFails=value;},
   open(){nodes.get('zd-budget-open').onclick();},
   save(delivery='12',contingency='5'){
@@ -52,7 +52,8 @@ function fixture(raw) {
   message(){return nodes.get('zd-toast').textContent || '';}
  };
 }
-(async()=>{
+module.exports={fixture,guestKey};
+if(require.main===module)(async()=>{
  const existing={features:[{id:'existing-plant',type:'plant',zone:'ChildrenGarden',name:'Test planting',points:[{x:120,y:140}],species:'fern',count:1,spacing:0.6,price:null,labour:null}],conditions:{ChildrenGarden:{light:'shade'}},allowances:{delivery:4},futureField:{keep:true}};
  // Valid plans round-trip without dropping site conditions or unknown fields.
  let f=fixture(JSON.stringify(existing)); f.open(); f.save();
