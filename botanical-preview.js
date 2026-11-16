@@ -1,0 +1,22 @@
+/* Review-only botanical renderer. Actual survey/plant data supplied by the app. */
+window.gardenDexBotanicalPreview=async function(host,rows,plants){
+ if(!rows?.length)throw Error('Load the measured section before opening its botanical preview.');
+ const T=await import('https://esm.sh/three@0.180.0');
+ const renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.setClearColor('#f1f1e8');host.replaceChildren(renderer.domElement);
+ const scene=new T.Scene(),camera=new T.PerspectiveCamera(40,1,.1,1000);
+ scene.add(new T.HemisphereLight('#fff8e8','#66704c',2));const sun=new T.DirectionalLight('#fff4db',3);sun.position.set(-15,35,20);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-60,right:60,top:60,bottom:-60});scene.add(sun);
+ const mat=c=>new T.MeshStandardMaterial({color:c,roughness:.9});
+ function mesh(g,m,x,y,z,parent=scene){const a=new T.Mesh(g,m);a.position.set(x,y,z);a.castShadow=true;a.receiveShadow=true;parent.add(a);return a;}
+ const ordered=[...rows].sort((a,b)=>Number(a.point_order)-Number(b.point_order));const shape=new T.Shape();ordered.forEach((p,i)=>{const x=Number(p.x_cm)/100,y=Number(p.y_cm)/100;i?shape.lineTo(x,y):shape.moveTo(x,y);});shape.closePath();const ground=mesh(new T.ShapeGeometry(shape),mat('#a8b580'),0,0,0);ground.rotation.x=-Math.PI/2;
+ const xs=ordered.map(p=>Number(p.x_cm)/100),ys=ordered.map(p=>Number(p.y_cm)/100),cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2,span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys),5);
+ const leafGeo=new T.SphereGeometry(1,8,6),bark=mat('#8b7b64'),leaf=mat('#52774b'),lightLeaf=mat('#789258');
+ const curve=(points,r,material,parent)=>mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),12,r,5,false),material,0,0,0,parent);
+ for(const p of plants||[]){if(!Number.isFinite(Number(p.x_cm))||!Number.isFinite(Number(p.y_cm)))continue;const name=((p.common_name||'')+' '+(p.species||'')).toLowerCase(),x=Number(p.x_cm)/100,z=-Number(p.y_cm)/100;const group=new T.Group();group.position.set(x,0,z);scene.add(group);
+ if(/rose|rosa/.test(name)){const green=mat('#496e40'),petal=mat('#c96f8b');for(let stem=0;stem<3;stem++){const angle=stem*2.1;curve([new T.Vector3(0,0,0),new T.Vector3(Math.cos(angle)*.15,.65,Math.sin(angle)*.15),new T.Vector3(Math.cos(angle)*.3,1.5,Math.sin(angle)*.3)],.012,green,group);for(let k=1;k<7;k++){const y=k*.2,a=angle+k*2;const l=mesh(leafGeo,k%2?leaf:lightLeaf,Math.cos(a)*.15,y,Math.sin(a)*.15,group);l.scale.set(.10,.025,.055);l.rotation.z=a;}
+ for(let k=0;k<2;k++){const bloom=new T.Group();bloom.position.set(Math.cos(angle)*.3,1.25+k*.23,Math.sin(angle)*.3);group.add(bloom);for(let j=0;j<10;j++){const a=j*2.4,rr=j<5?.035:.065;const pet=mesh(leafGeo,petal,Math.cos(a)*rr,j*.003,Math.sin(a)*rr,bloom);pet.scale.set(.05,.025,.04);pet.rotation.set(.5,a,.3);}}}}
+ else if(p.plant_type==='Tree'||p.plant_type==='Conifer'){const birch=/birch|betula/.test(name),height=birch?5:6;mesh(new T.CylinderGeometry(.06,.14,height,8),birch?mat('#d8d5c3'):bark,0,height/2,0,group);for(let j=0;j<9;j++){const a=j*2.4,y=height*.45+j*.25;curve([new T.Vector3(0,y,0),new T.Vector3(Math.cos(a)*.7,y+.4,Math.sin(a)*.7),new T.Vector3(Math.cos(a)*1.4,y+1,Math.sin(a)*1.4)],.025,bark,group);for(let k=0;k<12;k++){const t=k*2.4;const l=mesh(leafGeo,(j+k)%3?leaf:lightLeaf,Math.cos(a)*1.2+Math.sin(t)*.5,y+.8+Math.cos(t)*.5,Math.sin(a)*1.2+Math.cos(t)*.5,group);l.scale.set(.32,.16,.28);}}}
+ else{for(let j=0;j<12;j++){const a=j*2.4,l=mesh(leafGeo,j%2?leaf:lightLeaf,Math.cos(a)*.35,.3+(j%3)*.1,Math.sin(a)*.35,group);l.scale.set(.3,.24,.25);}}
+ }
+ let frame;const render=()=>{renderer.render(scene,camera);};function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.position.set(cx+span*.6,span*.65,-cy+span*1.1);camera.lookAt(cx,0,-cy);camera.updateProjectionMatrix();render();}const observer=new ResizeObserver(()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(resize);});observer.observe(host);resize();
+ return ()=>{observer.disconnect();cancelAnimationFrame(frame);scene.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of [].concat(o.material))m.dispose();});renderer.dispose();host.replaceChildren();};
+};
