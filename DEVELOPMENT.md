@@ -63,3 +63,11 @@ User said the live screen contained too much and asked to take information from 
 - Existing data, pricing and storage behavior retained. Actual signed-in survey/Supabase and phone checks remain required.
 
 Validation: JS syntax checks, existing map-navigation, zone-storage and design-pack bridge suites, and git diff --check passed. User's earlier instruction to make it live applies to this layout correction.
+
+## 2026-11-16 — Replace the active experience with a measured plan studio
+
+Latest user direction supersedes prior deferred-3D/dashboard roadmap: basic flat 2D established geometry, coloured plant symbols and labels, each section with its own 3D illustration. Replaced active garden-ui/design-studio entry points with plan-studio.js/css. Legacy modules remain in git for recovery but are not loaded by index.html. Existing authentication, survey loading, plant records, protected zone storage and editing remain. No database writes or schema changes.
+
+The new shell opens on the map; section dropdown, 2D/3D switch, plant key and edit drawer are the only main UI. Saved survey polygons remain unchanged. Existing plants expose their loaded records for symbolic display; colour is stable per species. Section preview projects the measured ground outline and saved existing/proposed positions with illustrative heights. This is a fixed axonometric SVG illustration, not photorealistic 3D or measured plant-height data. Paths and beds use saved points; planting groups use one symbolic group marker, not individual mature canopy footprints. No fabricated garden shown when the survey is unavailable.
+
+Checks: changed script syntax checks, existing map-navigation, zone-storage and design-pack bridge suites pass; git diff --check. Browser guest tested replacement shell and edit drawer. Authenticated survey, real garden rendering and Safari/device checks remain unverified. Old automation brief should not reintroduce dashboard/recipe/large design-pack screens; this user instruction takes precedence over it.

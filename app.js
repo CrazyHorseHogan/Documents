@@ -3041,6 +3041,7 @@ async function loadPlants() {
         .forEach(marker => marker.remove());
 
 
+    window.gardenPlanPlants = data;
     data.forEach(plant => {
 
     const status =

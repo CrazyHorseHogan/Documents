@@ -1,0 +1,44 @@
+/* A single measured plan and a section illustration, sharing the saved geometry. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),ns='http://www.w3.org/2000/svg',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api=()=>window.gardenDexZoneDesigner, map=$('garden-map');let section='WholeGarden',view='plan',pending=false;
+const names={WholeGarden:'Whole garden',ChildrenGarden:'Children’s garden',BigGarden:'Main garden',PineTrees:'Woodland',Bark:'Bark borders',Driveway:'Driveway',House:'House'};
+const colours=['#648d72','#a590b7','#bd8c98','#8fa85b','#c6a45e','#6b96a0','#8e9baf'];
+const colour=name=>{let n=0;for(const c of String(name))n=(n*31+c.charCodeAt(0))>>>0;return colours[n%colours.length];};
+const header=document.createElement('header');header.id='ps-header';header.innerHTML='<strong>GardenDex</strong><button id="ps-key" aria-expanded="false">Plant key</button>';document.body.append(header);
+const toolbar=document.createElement('nav');toolbar.id='ps-toolbar';toolbar.setAttribute('aria-label','Garden views');toolbar.innerHTML=`<select id="ps-section" aria-label="Garden section">${Object.entries(names).map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select><div><button id="ps-2d" aria-pressed="true">2D plan</button><button id="ps-3d" aria-pressed="false">3D view</button></div>`;document.body.append(toolbar);
+const key=document.createElement('aside');key.id='ps-legend';key.hidden=true;document.body.append(key);
+const preview=document.createElement('section');preview.id='ps-preview';preview.hidden=true;preview.setAttribute('aria-label','Section three-dimensional illustration');document.body.append(preview);
+const notice=document.createElement('p');notice.id='ps-notice';document.body.append(notice);
+const add=document.createElement('button');add.id='ps-add';add.textContent='+ Edit plan';add.onclick=()=>{const open=document.body.classList.toggle('ps-editing');add.textContent=open?'Done editing':'+ Edit plan';};document.body.append(add);
+function plan(){try{return api().snapshot();}catch(e){notice.textContent=e.message;return null;}}
+function entries(){const saved=(window.gardenPlanPlants||[]).filter(p=>(p.status||'Existing').toLowerCase()!=='removed').map(p=>({id:String(p.id),name:p.common_name||p.species||'Plant',species:p.species||p.common_name||'Plant',x:Number(p.x_cm),y:7000-Number(p.y_cm),type:p.plant_type||'Plant',zone:p.zone,existing:true}));const proposed=(plan()?.features||[]).filter(f=>f.type==='plant'||f.type==='hedge').map(f=>({id:f.id,name:api().plants.find(p=>p.id===f.species)?.name||f.name,species:api().plants.find(p=>p.id===f.species)?.species||f.name,x:f.points[0].x,y:f.points[0].y,type:'Plant group',zone:f.zone,count:f.count}));return [...saved,...proposed].filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));}
+function inSection(p){if(section==='WholeGarden')return true;const poly=map.querySelector(`.map-polygon[data-polygon="${section}"]`);if(!poly)return false;try{return poly.isPointInFill(new DOMPoint(p.x,p.y));}catch{return p.zone===section;}}
+function el(tag,attrs,parent){const e=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;}
+function flatten(){
+ map.querySelector('#ps-symbols')?.remove();const g=el('g',{id:'ps-symbols','pointer-events':'none'},map),list=entries().filter(inSection);
+ for(const p of list){const c=colour(p.species),r=/tree|conifer/i.test(p.type)?75:34;el('circle',{cx:p.x,cy:p.y,r,fill:c,stroke:'#fff','stroke-width':5},g);const t=el('text',{x:p.x+r+12,y:p.y+12,'font-size':36,fill:'#304d49','paint-order':'stroke',stroke:'#fff','stroke-width':5,'stroke-linejoin':'round'},g);t.textContent=p.name+(p.count?' × '+p.count:'');}
+ const unique=[...new Map(list.map(p=>[p.species,p])).values()];key.innerHTML='<button id="ps-close-key">Close ×</button><h2>Plant key</h2>'+unique.map(p=>`<p><i style="background:${colour(p.species)}"></i><span>${esc(p.name)}<small>${esc(p.species)}</small></span></p>`).join('')+(unique.length?'':'<p>Saved plants will appear here when your garden loads.</p>');$('ps-close-key').onclick=toggleKey;
+ if(!window.gardenSurveyRows?.length)notice.textContent='Sign in to load your established garden dimensions. No example measurements are used.';else notice.textContent='Measured ground plan · plant symbols are not mature canopy sizes';
+}
+function draw3D(){preview.replaceChildren();if(section==='WholeGarden'){preview.innerHTML='<div class="ps-empty"><h2>Choose a section</h2><p>Each section has its own 3D view.</p></div>';return;}const rows=(window.gardenSurveyRows||[]).filter(r=>r.polygon===section).sort((a,b)=>Number(a.point_order)-Number(b.point_order));if(rows.length<3){preview.innerHTML='<div class="ps-empty"><h2>Survey not loaded</h2><p>Sign in and load this section’s measured plan first.</p></div>';return;}
+ const pts=rows.map(r=>({x:Number(r.x_cm),y:7000-Number(r.y_cm)})),cx=pts.reduce((a,p)=>a+p.x,0)/pts.length,cy=pts.reduce((a,p)=>a+p.y,0)/pts.length;
+ const project=(p,h=0)=>({x:(p.x-cx)-(p.y-cy),y:((p.x-cx)+(p.y-cy))*.48-h});
+ const all=pts.map(p=>project(p)),minX=Math.min(...all.map(p=>p.x)),maxX=Math.max(...all.map(p=>p.x)),minY=Math.min(...all.map(p=>p.y))-700,maxY=Math.max(...all.map(p=>p.y));
+ const svg=el('svg',{viewBox:`${minX-250} ${minY-150} ${maxX-minX+500} ${maxY-minY+450}`,role:'img','aria-label':names[section]+' projected three-dimensional illustration'},preview);
+ const ground=pts.map(p=>project(p));el('polygon',{points:ground.map(p=>`${p.x},${p.y+60}`).join(' '),fill:'#d2cebc'},svg);el('polygon',{points:ground.map(p=>`${p.x},${p.y}`).join(' '),fill:section==='Driveway'?'#d8d8d2':section==='Bark'?'#c4af92':'#dbe4cb',stroke:'#9baf95','stroke-width':8},svg);
+ for(const f of plan()?.features||[]){if(f.zone!==section||!['bed','path'].includes(f.type))continue;const ps=f.points.map(p=>project(p,f.type==='bed'?40:0));el(f.type==='bed'?'polygon':'polyline',{points:ps.map(p=>`${p.x},${p.y}`).join(' '),fill:f.type==='bed'?'#b89b77':'none',stroke:f.type==='bed'?'#8d765a':'#c7bfa8','stroke-width':f.type==='path'?f.width*100:12,'stroke-linejoin':'round'},svg);}
+ for(const p of entries().filter(inSection).sort((a,b)=>project(a).y-project(b).y)){const tree=/tree|conifer/i.test(p.type),h=tree?420:85,at=project(p),c=colour(p.species);el('ellipse',{cx:at.x+35,cy:at.y+15,rx:tree?130:45,ry:tree?55:20,fill:'#536d4020'},svg);if(tree)el('line',{x1:at.x,y1:at.y,x2:at.x,y2:at.y-h,stroke:'#8c7c65','stroke-width':20},svg);el('ellipse',{cx:at.x,cy:at.y-h,rx:tree?140:48,ry:tree?160:50,fill:c,stroke:'#ffffff90','stroke-width':5},svg);const t=el('text',{x:at.x,y:at.y+65,'text-anchor':'middle','font-size':38,fill:'#36534d'},svg);t.textContent=p.name;}
+ const note=document.createElement('p');note.className='ps-preview-note';note.textContent='3D illustration · measured ground outline and saved positions; heights and plant forms are illustrative. Not a finished photorealistic render.';preview.append(note);
+}
+function refresh(){pending=false;flatten();if(view==='3d')draw3D();}
+function queue(){if(pending)return;pending=true;requestAnimationFrame(refresh);}
+// Only survey/plant/editor changes trigger refresh; the symbol layer itself is ignored.
+new MutationObserver(records=>{if(records.some(r=>!r.target.closest?.('#ps-symbols')&&[...r.addedNodes,...r.removedNodes].some(n=>n.id!=='ps-symbols')))queue();}).observe(map,{childList:true,subtree:true});
+function select(id){section=id;view='plan';$('ps-section').value=id;api().focus(id);setView('plan');queue();}
+function setView(next){view=next;preview.hidden=next!=='3d';document.body.classList.toggle('ps-show-3d',next==='3d');$('ps-2d').setAttribute('aria-pressed',String(next==='plan'));$('ps-3d').setAttribute('aria-pressed',String(next==='3d'));add.hidden=next==='3d';if(next==='3d')draw3D();}
+function toggleKey(){key.hidden=!key.hidden;$('ps-key').setAttribute('aria-expanded',String(!key.hidden));}
+$('ps-key').onclick=toggleKey;$('ps-section').onchange=e=>select(e.target.value);$('ps-2d').onclick=()=>setView('plan');$('ps-3d').onclick=()=>setView('3d');window.openGarden3D=id=>select(id);window.addEventListener('gardendex:planchange',queue);
+const guest=document.createElement('button');guest.id='ps-guest';guest.textContent='Open plan without signing in';guest.onclick=()=>{$('login-screen').classList.add('hidden');refresh();};document.querySelector('.login-card')?.append(guest);
+document.body.dataset.gdView='garden';document.body.classList.add('ps-active');select('WholeGarden');
+})();
