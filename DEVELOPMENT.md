@@ -2,6 +2,8 @@
 
 The active application is in CrazyHorseHogan/Documents, main branch. CrazyHorseHogan/GardenDex is empty. The daily development automation now targets Documents.
 
+Current direction: `plan-studio.js/css` is the active flat 2D plan with separate section illustrations. Historical dashboard/design-pack and deferred-3D notes below are superseded. Do not reload `garden-ui.js` or `design-studio.js`; preserve established geometry and all saved/unknown fields.
+
 ## 2026-11-14 — Map touch reliability
 
 Branch: codex/map-touch-reliability. Keep changes for review; do not merge or deploy automatically.
@@ -71,3 +73,15 @@ Latest user direction supersedes prior deferred-3D/dashboard roadmap: basic flat
 The new shell opens on the map; section dropdown, 2D/3D switch, plant key and edit drawer are the only main UI. Saved survey polygons remain unchanged. Existing plants expose their loaded records for symbolic display; colour is stable per species. Section preview projects the measured ground outline and saved existing/proposed positions with illustrative heights. This is a fixed axonometric SVG illustration, not photorealistic 3D or measured plant-height data. Paths and beds use saved points; planting groups use one symbolic group marker, not individual mature canopy footprints. No fabricated garden shown when the survey is unavailable.
 
 Checks: changed script syntax checks, existing map-navigation, zone-storage and design-pack bridge suites pass; git diff --check. Browser guest tested replacement shell and edit drawer. Authenticated survey, real garden rendering and Safari/device checks remain unverified. Old automation brief should not reintroduce dashboard/recipe/large design-pack screens; this user instruction takes precedence over it.
+
+## 2026-11-17 — Restore touch placement for Move on map
+
+Inspected current main (`4f0c31a`), development notes, active scripts and open draft PR #2 (standalone botanical renderer; no review comments). No applicable AGENTS.md found in the checkout/ancestors. This does not overlap that prototype: branch `codex/touch-feature-move` fixes the existing editor/navigation handoff.
+
+The navigator identified editor gestures only by the Save feature button. Move mode has no such button, so its map taps were swallowed and finger movement could pan instead. Added a read-only `isPlacing()` editor API and made navigation respect it, retaining the finish-button fallback. Single-finger input belongs to placement, two-finger pinch still works, gesture-generated clicks stay suppressed, and normal panning resumes after placement ends. Updated script cache versions. No persistence format, survey geometry, plant forms, stored dimensions or records changed; no dashboard entry points enabled.
+
+Verified: syntax checks for all root scripts/tests; map-navigation, feature-move, zone-storage and design-pack bridge suites; `git diff --check`. New navigation test fails against main at the blocked move tap and passes with the fix. The real-editor API fixture checks details → move → section cancellation without storage writes or changes to unknown fields. These are Node SVG/event and minimal DOM/storage fixtures, not browser/device tests.
+
+Blocked: local Playwright/Chromium launch fails at `process_singleton_posix.cc:297` (`socket() failed: Operation not permitted`). No visual, actual touch, signed-in garden/Supabase or Safari verification performed. Before merge: on a signed-in test garden, move an existing proposed group, pinch without relocating it, tap its target, change section to cancel another move, reload and compare saved positions. Do not modify production records merely to test.
+
+Next: verify that handoff on a phone, then make individual proposed group/hedge positions consistent between the flat plan and section projection; currently the plan studio uses a single group anchor. Use existing saved points/spacing, keep heights explicitly illustrative and never fill missing measurements with guessed dimensions. Keep budgets/jobs/recipes and large panels out of the main interface. No automatic merge/deploy.
