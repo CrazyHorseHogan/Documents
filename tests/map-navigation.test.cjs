@@ -14,9 +14,10 @@ function target(name) {
 const window = target('window');
 const document = target('document');
 const nodes = new Map(['mn-in','mn-out','mn-fit','mn-dim','mn-info'].map(id=>[id,{setAttribute(){}}]));
-let drawing = false;
+let drawing = false, moving = false;
+window.gardenDexZoneDesigner = {isPlacing:()=>drawing||moving};
 let captured = new Set();
-let designClicks = 0;
+let designClicks = 0, moveClicks = 0;
 const map = Object.assign(target('map'), {
  style: {}, viewBox: {baseVal: {x:0,y:0,width:1000,height:1000}},
  querySelector: () => null, querySelectorAll: () => [],
@@ -40,7 +41,7 @@ document.body = {dataset:{gdView:'garden'},append(){}};
 document.getElementById = id => id === 'garden-map' ? map : id === 'zd-finish' ? (drawing ? {} : null) : nodes.get(id);
 document.createElement = () => ({setAttribute(){}});
 // Mimic zone-designer registering its map capture listener before navigation.
-map.addEventListener('click',()=>{if(drawing) designClicks++;});
+map.addEventListener('click',()=>{if(drawing) designClicks++;if(moving) moveClicks++;});
 const context = {window,document,performance,Map,Math,Array,String,setTimeout,clearTimeout,
  MutationObserver: class {observe(){}},placementMode:false};
 const sourcePath = process.env.NAV_SOURCE || path.join(__dirname,'..','map-navigation.js');
@@ -81,6 +82,27 @@ assert.equal(designClicks,0,'no accidental drawing point after pinch');
 // The next deliberate tap must be accepted immediately, without waiting 500ms.
 fire('pointerdown',7,250,300);fire('pointerup',7,250,300);fire('click',0,250,300);
 assert.equal(designClicks,1,'deliberate drawing tap');
+// Move mode has no zd-finish button. Its tap must reach the editor instead of
+// being swallowed as navigation; a single-finger motion must not pan the map.
+drawing=false; moving=true;before=box();
+fire('pointerdown',20,250,300);fire('pointerup',20,250,300);
+assert(!fire('click',0,250,300).stopped,'move placement tap reaches editor');
+assert.equal(moveClicks,1,'move target accepted');
+fire('pointerdown',21,200,300);fire('pointermove',21,240,300);
+near(box().x,before.x,'single-finger movement cannot pan during placement');
+fire('pointerup',21,240,300);
+// Pinching stays available in move mode; its generated click cannot move a feature.
+fire('pointerdown',22,200,300);fire('pointerdown',23,300,300);
+fire('pointermove',23,400,300);near(box().width,before.width/2,'move mode pinch');
+fire('pointerup',22,200,300);fire('pointerup',23,400,300);
+assert(fire('click',0,300,300).stopped,'post-pinch move click blocked');
+assert.equal(moveClicks,1,'pinch cannot relocate a feature');
+fire('pointerdown',24,250,300);fire('pointerup',24,250,300);fire('click',0,250,300);
+assert.equal(moveClicks,2,'fresh deliberate move tap accepted immediately');
+// Completing or cancelling the move returns control to ordinary map navigation.
+moving=false;before=box();
+fire('pointerdown',25,200,300);fire('pointermove',25,240,300);
+near(box().x,before.x-before.width*.1,'pan resumes after move mode');fire('pointerup',25,240,300);
 // Cancelled and lost pointers cannot leave a stale pinch/drag in the next gesture.
 fire('pointerdown',8,200,300);fire('pointercancel',8,200,300);
 fire('pointerdown',9,200,300);fire('lostpointercapture',9,200,300);
@@ -89,4 +111,4 @@ near(box().x,before.x-before.width*.1,'pan after cancellation');fire('pointerup'
 fire('pointerdown',11,200,300);fire('blur');before=box();fire('pointermove',11,400,300);
 near(box().x,before.x,'blur resets gesture');
 assert(Object.values(box()).every(Number.isFinite),'finite viewBox');
-console.log('PASS: marker tap, stable pan, drag click suppression, pinch translation, pinch-to-pan, pinch zoom, drawing suppression and fresh tap, cancellation, lost capture, blur.');
+console.log('PASS: marker tap, stable pan, drag click suppression, pinch translation, pinch-to-pan, pinch zoom, drawing suppression and fresh tap, move taps/pinch/pan handoff, cancellation, lost capture, blur.');

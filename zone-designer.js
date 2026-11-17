@@ -72,6 +72,8 @@ function budget(){const d=read();if(storageError){ledger.hidden=true;message(sto
 window.gardenDexZoneDesigner={
  snapshot(){const d=read();if(storageError)throw Error(storageError);return JSON.parse(JSON.stringify(d));},
  update(mutator){const d=read();if(storageError)throw Error(storageError);mutator(d);if(!save(d))throw Error('Plan could not be saved.');renderControls();draw();window.dispatchEvent(new Event('gardendex:planchange'));},
+ // Navigation must recognise move mode too; it has no Save feature button.
+ isPlacing:()=>!!mode,
  focus:focusZone,budget,quantity,unit,cost,unpriced,
  edit(id){renderControls();edit(id);},
  start(type,species){start(type);if(species&&$('zd-species'))$('zd-species').value=species;},
