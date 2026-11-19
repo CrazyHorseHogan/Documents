@@ -3128,11 +3128,10 @@ function drawPlantMarker(plant) {
        as the garden polygons.
     */
 
-    const displayX =
-        Number(plant.x_cm);
-
-    const displayY =
-        7000 - Number(plant.y_cm);
+    const position = window.gardenDexCoordinates.toDisplay(plant);
+    if (!position) return; // Keep the record; do not guess a display location.
+    const displayX = position.x;
+    const displayY = position.y;
 
 
     const marker =

@@ -83,3 +83,15 @@ Verified: syntax checks for all root scripts/tests; map-navigation, zone-storage
 Blocked/unverified: Playwright/Chromium still fails to launch (`process_singleton_posix.cc:297`, `socket() failed: Operation not permitted`). No browser/visual, signed-in garden, live Supabase, phone performance, saved-reload or Safari verification. Before merge, compare a test group's/hedge's members in both views, move the group, reload and check labels/positions on desktop and iPhone. Do not alter production records merely to test.
 
 Next: verify signed-in rendering and phone readability; audit saved existing row/group records and missing-coordinate handling before changing their display. Keep the basic plan plus separate section illustrations, and never infer missing survey dimensions or measured plant heights. No merge or deployment performed.
+
+## 2026-11-19 — Do not turn missing saved plant coordinates into zero
+
+Inspected main `4f0c31a`, applicable instructions (no AGENTS.md in checkout/ancestors), current log and open PRs #2–#4. Continued the relevant plan-accuracy branch/PR #4 rather than creating overlapping plan-renderer work; its review discussion is empty. PRs #2/#3 remain separate.
+
+Added `garden-coordinates.js`, loaded before app.js, with a shared read-only saved-plant conversion. Null, blank, boolean, object/array and non-finite values are unplaced instead of becoming zero/NaN. Actual numeric zero, numeric strings and decimals retain the established `7000 - y_cm` transform. Both the underlying saved-plant marker and the active plan/section entries use it, so no invisible interactive marker remains at a guessed location. The existing compact plan/illustration notes report how many non-removed records need coordinates. All records/unknown fields stay intact; this is display filtering, not data repair/deletion. Survey geometry/plant heights are unchanged.
+
+Verified: all root/test JS syntax; five suites (map-navigation, zone-storage, design-pack bridge, planting-layout, garden-coordinates); `git diff --check`. Synthetic tests exercise the actual app marker function and plan studio, missing coordinates in both views, genuine zero/decimal positions, notice clearing, unchanged records and unknown fields. The marker regression fails against the pre-change app. No real measurements, sessions or secrets were used in tests.
+
+Blocked: Chromium launch still fails with `socket() failed: Operation not permitted`; no visual, signed-in garden/Supabase, real phone/Safari or saved-reload verification. Before merge, confirm missing-coordinate records are counted but not plotted, and a genuine zero-coordinate test plant still appears. Do not edit production records solely for testing.
+
+Next: validate incomplete survey rows consistently before rendering measured section outlines, then audit existing saved row/group records. Continue the basic 2D plan plus separate illustrative section views; no dashboards, schema changes, merge or deployment.

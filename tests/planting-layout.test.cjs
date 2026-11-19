@@ -37,6 +37,7 @@ const rows=[{x_cm:0,y_cm:7000},{x_cm:1000,y_cm:7000},{x_cm:1000,y_cm:6000},{x_cm
 const saved=[{id:'existing',common_name:'Birch',plant_type:'Tree',species:'Betula pendula',x_cm:200,y_cm:6800,unknown:'keep'}];
 const window={gardenDexZoneDesigner:f.api,gardenSurveyRows:rows,gardenPlanPlants:saved,addEventListener:(name,cb)=>listeners.set(name,cb)};
 const originals=JSON.stringify({rows,saved});
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','garden-coordinates.js'),'utf8'),{window});
 vm.runInNewContext(fs.readFileSync(process.env.PLAN_SOURCE||path.join(__dirname,'..','plan-studio.js'),'utf8'),{window,document,DOMPoint:class{constructor(x,y){this.x=x;this.y=y;}},MutationObserver:class{observe(){}},requestAnimationFrame:cb=>callbacks.push(cb)});
 function drain(){let limit=20;while(callbacks.length){assert(limit-->0,'refresh settles');callbacks.shift()();}}
 function descendants(root){return root.children.flatMap(c=>[c,...descendants(c)]);}
@@ -50,6 +51,18 @@ assert.equal(nodes.get('ps-symbols').children.filter(c=>c.tagName==='text').leng
 nodes.get('ps-3d').onclick();verifyProjection(flat);
 assert.equal(descendants(nodes.get('ps-preview')).filter(c=>c.tagName==='text').length,3);
 assert.match(descendants(nodes.get('ps-preview')).find(c=>c.tagName==='p').textContent,/heights and plant forms are illustrative/);
+// Missing/blank coordinates must never create a false marker in either view.
+saved.push({id:'missing-x',x_cm:null,y_cm:6800,unknown:'retain'},
+ {id:'blank-y',x_cm:200,y_cm:' '},
+ {id:'removed-bad',x_cm:null,y_cm:null,status:'Removed'});
+listeners.get('gardendex:planchange')();drain();
+assert.equal(renderedPositions().size,8,'invalid locations are omitted without changing valid plants');
+verifyProjection(renderedPositions());
+assert.match(nodes.get('ps-notice').textContent,/2 saved plant records need coordinates/);
+assert.match(descendants(nodes.get('ps-preview')).find(c=>c.tagName==='p').textContent,/2 saved plant records need coordinates/);
+assert.equal(saved[1].unknown,'retain');
+saved.splice(1);listeners.get('gardendex:planchange')();drain();
+assert(!nodes.get('ps-notice').textContent.includes('need coordinates'),'notice clears when data is corrected');
 // A saved move must relocate all derived members consistently in both views.
 f.api.update(d=>{d.features[0].points[0].x+=100;});listeners.get('gardendex:planchange')();drain();
 flat=renderedPositions();assert.deepEqual(flat.get('grid:0'),{x:550,y:450});verifyProjection(flat);
