@@ -95,3 +95,15 @@ Verified: all root/test JS syntax; five suites (map-navigation, zone-storage, de
 Blocked: Chromium launch still fails with `socket() failed: Operation not permitted`; no visual, signed-in garden/Supabase, real phone/Safari or saved-reload verification. Before merge, confirm missing-coordinate records are counted but not plotted, and a genuine zero-coordinate test plant still appears. Do not edit production records solely for testing.
 
 Next: validate incomplete survey rows consistently before rendering measured section outlines, then audit existing saved row/group records. Continue the basic 2D plan plus separate illustrative section views; no dashboards, schema changes, merge or deployment.
+
+## 2026-11-20 — Withhold incomplete supplied survey outlines consistently
+
+Inspected main `4f0c31a`, open PRs #2–#4, this log and applicable instructions (no AGENTS.md found in checkout/ancestors). Continued plan-accuracy PR #4 on its existing branch; no review comments. Other PR scopes remain botanical prototyping and touch navigation.
+
+Added a shared read-only survey normalizer used by app.js polygon drawing and the active section illustration. A section with missing/non-finite coordinates or order, duplicate order values, fewer than three distinct vertices, or zero/non-finite signed area is withheld as a whole. Do not drop a bad vertex and connect its neighbours into a different outline. Unaffected sections render normally. Actual zero coordinates, numeric strings, distinct fractional ordering and explicit closing vertices remain supported. Raw rows/unknown fields remain untouched. Compact notices distinguish incomplete survey data from a section that has not loaded. Script versions refreshed; established transform and plant forms/heights unchanged.
+
+Verified: syntax checks for all root/test JavaScript, six Node suites (including new survey-outline tests), and `git diff --check`. Tests execute actual drawGarden and plan-studio paths with synthetic fixtures: whole-section rejection, valid-section isolation, projected outline removal/recovery, sorting without raw-data mutation and zero/closing-vertex handling. The 2D regression fails against the pre-change renderer. These checks validate supplied records, not survey accuracy/completeness against an external source; an entirely missing vertex cannot be inferred without authoritative measurements.
+
+Blocked/unverified: local Chromium launch again fails with `socket() failed: Operation not permitted`. No visual, signed-in garden/Supabase, device/Safari or saved-reload verification. Before merge, use a separate test fixture to compare incomplete and restored section outlines in both views. No production records were edited.
+
+Next: signed-in comparison against actual stored survey measurements when authorized access is available, then inspect existing saved row/group rendering. Keep the basic plan/section interface; no dashboards, data/schema writes, merge or deployment.

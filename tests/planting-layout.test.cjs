@@ -68,5 +68,12 @@ f.api.update(d=>{d.features[0].points[0].x+=100;});listeners.get('gardendex:plan
 flat=renderedPositions();assert.deepEqual(flat.get('grid:0'),{x:550,y:450});verifyProjection(flat);
 assert.equal(JSON.parse(f.values.get(guestKey)).features[0].unknown.keep,true);
 assert.equal(JSON.parse(f.values.get(guestKey)).unknown.keep,true);
+// Never project a changed boundary after a supplied vertex becomes incomplete.
+rows[1].x_cm=null;listeners.get('gardendex:planchange')();drain();
+assert.equal(descendants(nodes.get('ps-preview')).filter(c=>c.tagName==='svg').length,0,'incomplete section has no projected outline');
+assert.match(nodes.get('ps-preview').innerHTML,/Survey incomplete/);
+assert.match(nodes.get('ps-notice').textContent,/1 section outline is unavailable/);
+rows[1].x_cm=1000;listeners.get('gardendex:planchange')();drain();verifyProjection(renderedPositions());
+assert(!nodes.get('ps-notice').textContent.includes('unavailable'),'valid survey reload restores the normal notice');
 assert.equal(JSON.stringify({rows,saved}),originals,'existing plants and survey rows unchanged');
 console.log('Planting layout passed: grid/hedge geometry, invalid-data guards, matching 2D/projected positions, grouped labels, saved move and unchanged source data.');
