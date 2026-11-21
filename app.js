@@ -118,54 +118,12 @@ function drawGarden(rows) {
     window.gardenSurveyRows = rows;
 
 
-    /*
-       Supabase gives us rows like:
-
-       BigGarden | 1 | D | 920 | 400
-       BigGarden | 2 | E | 1060 | 0
-
-       We first group those rows
-       by polygon name.
-    */
-
-
-    const polygons = {};
-
-
-    rows.forEach(row => {
-
-
-        if (!polygons[row.polygon]) {
-
-            polygons[row.polygon] = [];
-
-        }
-
-
-        polygons[row.polygon].push({
-
-            pointName:
-                row.geogebra_point,
-
-            order:
-                Number(row.point_order),
-
-            x:
-                Number(row.x_cm),
-
-            y:
-                Number(row.y_cm)
-
-        });
-
-    });
-
-
-    console.log(
-        "Grouped polygons:",
-        polygons
-    );
-
+    // Keep the original survey rows intact. Only complete supplied boundaries render.
+    const survey = window.gardenDexCoordinates.survey(rows);
+    const polygons = survey.sections;
+    if (survey.invalidSections.length || survey.unassignedRows) {
+        connectionStatus.textContent = 'Some survey data is incomplete; affected outlines are not shown.';
+    }
 
     /*
        Clear map before drawing.
@@ -3128,11 +3086,10 @@ function drawPlantMarker(plant) {
        as the garden polygons.
     */
 
-    const displayX =
-        Number(plant.x_cm);
-
-    const displayY =
-        7000 - Number(plant.y_cm);
+    const position = window.gardenDexCoordinates.toDisplay(plant);
+    if (!position) return; // Keep the record; do not guess a display location.
+    const displayX = position.x;
+    const displayY = position.y;
 
 
     const marker =
