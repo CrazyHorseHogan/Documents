@@ -107,3 +107,15 @@ Verified: syntax checks for all root/test JavaScript, six Node suites (including
 Blocked/unverified: local Chromium launch again fails with `socket() failed: Operation not permitted`. No visual, signed-in garden/Supabase, device/Safari or saved-reload verification. Before merge, use a separate test fixture to compare incomplete and restored section outlines in both views. No production records were edited.
 
 Next: signed-in comparison against actual stored survey measurements when authorized access is available, then inspect existing saved row/group rendering. Keep the basic plan/section interface; no dashboards, data/schema writes, merge or deployment.
+
+## 2026-11-21 — Keep proposed-plan read failures visible in the active studio
+
+Inspected main `4f0c31a`, open PRs #2–#4, this log and instructions (no applicable AGENTS.md in checkout/ancestors). Continued relevant plan/data-accuracy PR #4; review discussion remains empty. Saved row/group persistence is still incomplete in the existing app; do not invent endpoints or new database fields to reconstruct it.
+
+Fixed an active-studio failure state: snapshot errors were written into the measurement notice, then overwritten by the normal plan caption. Added one compact accessible warning above either view and a read-only Retry loading button. Each plan-studio render uses one snapshot, so repeated reads cannot hide a transient failure or mix available and unavailable proposed layouts in that render. Existing plant data remains available; the warning explicitly says the view may be incomplete. Successful retry clears it and restores proposed planting. No storage format, geometry, plant form/height or write path changed; script/style versions refreshed.
+
+Verified: all root/test JS syntax, six Node regression suites and `git diff --check`. Expanded the actual plan-studio/editor fixture to cover corrupted storage in 2D/section views, one-off denied reads, persistent role=alert state, restoration in both views, zero retry writes and exact retention of the saved document/unknown fields. Regression fails against the pre-change studio. Tests use synthetic records and minimal DOM/SVG fixtures, not a real browser.
+
+Blocked/unverified: Chromium still fails to launch (`socket() failed: Operation not permitted`). No visual, signed-in garden/Supabase, phone/Safari or saved-reload verification. Before merge, test a read failure only in a disposable local fixture, inspect the warning/read-only retry on desktop and phone, and compare recovered positions. No production records changed.
+
+Next: signed-in survey/plant comparison when authorized access is available; audit safe persistence of existing row/group data before changing its display. Keep the basic plan plus section illustration interface. No dashboards, schema changes, merge or deployment.

@@ -4,3 +4,9 @@ body.ps-active.ps-editing .zd-more-tools{display:block}body.ps-active #zd-budget
 
 /* The plan studio draws the same individual planting positions as the section view. */
 body.ps-active #zd-drawing .zd-planting{display:none}
+
+/* Keep storage failures visible over either view without opening another panel. */
+#ps-storage-warning{position:fixed;top:132px;left:50%;transform:translateX(-50%);width:min(92%,560px);box-sizing:border-box;padding:12px 14px;background:#fff4da;border:1px solid #cfb77b;border-radius:6px;color:#574820;font:12px/1.5 system-ui;z-index:550}
+#ps-storage-warning[hidden]{display:none!important}
+#ps-storage-warning button{display:block;margin-top:8px;min-height:44px;padding:8px 12px;border:1px solid #bca76e;border-radius:4px;background:#fffdf5;color:#574820;font:inherit;cursor:pointer}
+#ps-storage-warning button:focus-visible{outline:3px solid #b78eac;outline-offset:3px}
