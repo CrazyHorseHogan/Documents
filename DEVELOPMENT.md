@@ -119,3 +119,15 @@ Verified: all root/test JS syntax, six Node regression suites and `git diff --ch
 Blocked/unverified: Chromium still fails to launch (`socket() failed: Operation not permitted`). No visual, signed-in garden/Supabase, phone/Safari or saved-reload verification. Before merge, test a read failure only in a disposable local fixture, inspect the warning/read-only retry on desktop and phone, and compare recovered positions. No production records changed.
 
 Next: signed-in survey/plant comparison when authorized access is available; audit safe persistence of existing row/group data before changing its display. Keep the basic plan plus section illustration interface. No dashboards, schema changes, merge or deployment.
+
+## 2026-11-22 — Preserve unknown point fields during feature transformations
+
+Inspected main `4f0c31a`, current development notes, open PRs #2–#4 and instructions (no applicable AGENTS.md found in checkout/ancestors). Continued related proposed-layout/data-safety PR #4; no review comments. This does not duplicate #3's pointer-navigation fix.
+
+Move, copy and mirror previously replaced each saved point with only x/y, silently dropping any additional fields. Each transformation now retains the point's other fields before overriding the coordinates it changes. Existing translation/reflection calculations, bounds checks, feature IDs/copy semantics and persistence protections remain. Refreshed the editor script version. No new measurements, schema fields, interface panels or write operations introduced.
+
+Verified: all root/test JS syntax; seven Node regression suites; `git diff --check`. The new test executes the actual editor copy/mirror functions and move click handler using synthetic storage/map fixtures. It checks exact coordinates, retained nested point/feature/document fields, unchanged originals for copies and mirrors, and zero writes for rejected placements. The baseline copy operation fails this metadata regression. No live records or survey measurements were used.
+
+Blocked/unverified: Chromium launch still fails with `socket() failed: Operation not permitted`; no browser/visual, signed-in garden/Supabase, phone/Safari or saved-reload verification. Before merge, use a disposable plan with extra point metadata to move/copy/mirror/reload and compare its saved document. No production records changed.
+
+Next: authorized signed-in comparison and existing row/group persistence audit; inspect other document replacements for unknown-field loss. Keep the basic flat plan and separate illustrative section views. No merge/deployment/schema changes.
