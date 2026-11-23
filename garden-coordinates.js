@@ -32,5 +32,28 @@ function survey(rows){
  }
  return {sections,invalidSections,unassignedRows};
 }
-window.gardenDexCoordinates=Object.freeze({toDisplay,survey});
+// Native SVG hit-testing when available; otherwise use the actual displayed vertices.
+function containsPoint(polygon,point){
+ const x=coordinate(point?.x),y=coordinate(point?.y);
+ if(!polygon||x===null||y===null)return false;
+ if(typeof DOMPoint==='function'&&typeof polygon.isPointInFill==='function'){
+  try{return polygon.isPointInFill(new DOMPoint(x,y));}catch{/* Use the same polygon below. */}
+ }
+ try{
+  const list=polygon.points,n=list?.numberOfItems;
+  if(!Number.isInteger(n)||n<3)return false;
+  const vertices=Array.from({length:n},(_,i)=>{const p=list.getItem(i);return {x:coordinate(p.x),y:coordinate(p.y)};});
+  if(vertices.some(p=>p.x===null||p.y===null))return false;
+  const area=vertices.reduce((sum,a,i)=>{const b=vertices[(i+1)%n];return sum+a.x*b.y-b.x*a.y;},0);
+  if(!Number.isFinite(area)||area===0)return false;
+  let inside=false;
+  for(let i=0,j=n-1;i<n;j=i++){
+   const a=vertices[j],b=vertices[i];
+   if((x-a.x)*(b.y-a.y)===(y-a.y)*(b.x-a.x)&&x>=Math.min(a.x,b.x)&&x<=Math.max(a.x,b.x)&&y>=Math.min(a.y,b.y)&&y<=Math.max(a.y,b.y))return true;
+   if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)inside=!inside;
+  }
+  return inside;
+ }catch{return false;}
+}
+window.gardenDexCoordinates=Object.freeze({toDisplay,survey,containsPoint});
 })();

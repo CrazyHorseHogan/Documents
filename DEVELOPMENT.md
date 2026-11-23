@@ -131,3 +131,15 @@ Verified: all root/test JS syntax; seven Node regression suites; `git diff --che
 Blocked/unverified: Chromium launch still fails with `socket() failed: Operation not permitted`; no browser/visual, signed-in garden/Supabase, phone/Safari or saved-reload verification. Before merge, use a disposable plan with extra point metadata to move/copy/mirror/reload and compare its saved document. No production records changed.
 
 Next: authorized signed-in comparison and existing row/group persistence audit; inspect other document replacements for unknown-field loss. Keep the basic flat plan and separate illustrative section views. No merge/deployment/schema changes.
+
+## 2026-11-23 — Use loaded section geometry when native SVG hit-testing fails
+
+Inspected main `4f0c31a`, current notes/instructions and open PRs #2–#4; no applicable AGENTS.md in checkout/ancestors. Continued relevant geometry/data-safety PR #4 (empty review discussion), separate from #3's navigation work.
+
+The editor previously returned true for every point if isPointInFill/DOMPoint failed; the studio guessed membership from the saved zone label. Added shared containment: native SVG testing where available, otherwise ray-cast the actual displayed polygon vertices with boundary points included. Concave outlines use their actual shape, not a bounding rectangle. Missing/invalid geometry rejects the point. Both editing and section filtering use it. Existing coordinates, records and unknown fields remain untouched; cache versions refreshed. No invented dimensions or new interface panels.
+
+Verified: all root/test JS syntax, eight Node suites and `git diff --check`. New synthetic tests cover missing/throwing/native SVG APIs, concave and reversed outlines, boundary points and invalid geometry. Actual editor guard/move-handler tests reject an outside write and retain valid inside movement; the baseline guard fails. Plan-studio tests verify geometry-based membership despite incorrect/missing zone labels. These are numeric/DOM/SVG fixtures, not browser tests.
+
+Blocked/unverified: Chromium launch still fails (`socket() failed: Operation not permitted`); no visual, real Safari/touch, signed-in garden/Supabase or saved-reload verification. Before merge, compare inside/outside and edge taps in a disposable measured-section fixture on phone and desktop. No production data was changed.
+
+Next: authorized signed-in geometry comparison, Safari gesture/containment checks and existing row/group persistence audit. Keep the basic plan and separate illustrative section views. No merge/deployment/schema changes.

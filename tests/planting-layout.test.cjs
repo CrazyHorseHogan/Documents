@@ -31,7 +31,7 @@ class Element{
  querySelectorAll(selector){return selector==='.map-polygon'?[polygon]:[];}
 }
 const body=new Element(),map=new Element('svg');map.id='garden-map';nodes.set(map.id,map);
-const polygon=new Element('polygon');polygon.dataset.polygon='ChildrenGarden';polygon.isPointInFill=p=>p.x>=0&&p.x<=1000&&p.y>=0&&p.y<=1000;
+const polygon=new Element('polygon');polygon.dataset.polygon='ChildrenGarden';polygon.points={numberOfItems:4,getItem:i=>[{x:0,y:0},{x:1000,y:0},{x:1000,y:1000},{x:0,y:1000}][i]};polygon.isPointInFill=p=>p.x>=0&&p.x<=1000&&p.y>=0&&p.y<=1000;
 const document={body,getElementById:id=>nodes.get(id)||null,createElement:t=>new Element(t),createElementNS:(_,t)=>new Element(t),querySelector:()=>null};
 const rows=[{x_cm:0,y_cm:7000},{x_cm:1000,y_cm:7000},{x_cm:1000,y_cm:6000},{x_cm:0,y_cm:6000}].map((r,i)=>({...r,point_order:i,polygon:'ChildrenGarden'}));
 const saved=[{id:'existing',common_name:'Birch',plant_type:'Tree',species:'Betula pendula',x_cm:200,y_cm:6800,unknown:'keep'}];
@@ -45,6 +45,15 @@ function renderedPositions(){return new Map(nodes.get('ps-symbols').children.fil
 function verifyProjection(flat){const groups=descendants(nodes.get('ps-preview')).filter(c=>c.tagName==='g'&&c.getAttribute('data-plant-id'));assert.equal(groups.length,8);for(const g of groups){const p=flat.get(g.getAttribute('data-plant-id'));assert(p,'each projected plant has the same plan identity');const shadow=g.children.find(c=>c.tagName==='ellipse');assert.equal(Number(shadow.getAttribute('cx'))-35,p.x-p.y);assert(Math.abs(Number(shadow.getAttribute('cy'))-15-(p.x+p.y-1000)*.48)<1e-8,'same ground projection');}}
 drain();window.openGarden3D('ChildrenGarden');drain();
 let flat=renderedPositions();assert.equal(flat.size,8,'one existing + four grid plants + three hedge plants');
+// Section membership follows displayed geometry when native SVG hit-testing throws,
+// even if an old zone label is missing or disagrees with the saved position.
+polygon.isPointInFill=()=>{throw Error('unsupported');};
+saved[0].zone='WrongSection';saved.push({id:'outside-section',x_cm:1500,y_cm:6800,zone:'ChildrenGarden'});
+listeners.get('gardendex:planchange')();drain();
+assert(renderedPositions().has('existing'),'inside saved plant does not need a matching zone label');
+assert(!renderedPositions().has('outside-section'),'matching zone label cannot include an outside position');
+delete saved[0].zone;saved.pop();listeners.get('gardendex:planchange')();drain();flat=renderedPositions();
+
 assert.deepEqual(flat.get('existing'),{x:200,y:200},'saved survey Y transform applied once');
 assert.deepEqual(flat.get('grid:0'),{x:450,y:450});
 assert.equal(nodes.get('ps-symbols').children.filter(c=>c.tagName==='text').length,3,'one label per group plus existing plant');
