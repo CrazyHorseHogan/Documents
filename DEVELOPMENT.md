@@ -143,3 +143,15 @@ Verified: all root/test JS syntax, eight Node suites and `git diff --check`. New
 Blocked/unverified: Chromium launch still fails (`socket() failed: Operation not permitted`); no visual, real Safari/touch, signed-in garden/Supabase or saved-reload verification. Before merge, compare inside/outside and edge taps in a disposable measured-section fixture on phone and desktop. No production data was changed.
 
 Next: authorized signed-in geometry comparison, Safari gesture/containment checks and existing row/group persistence audit. Keep the basic plan and separate illustrative section views. No merge/deployment/schema changes.
+
+## 2026-11-24 — End unfinished placement when leaving the edit drawer
+
+Inspected main `4f0c31a`, current notes/instructions and open PRs #2–#4; no applicable AGENTS.md found in checkout/ancestors. Continued relevant active-studio/data-safety PR #4 (no review comments). This adds editor-session cleanup, not #3's pointer-navigation change.
+
+The Edit plan/Done editing toggle previously hid tools while retaining active drawing/move state. Added an explicit cancel API that clears only transient mode, points and selection, redraws saved features and reports an unfinished placement cancellation when needed. Closing the drawer or switching to 3D calls it and resets the toggle label. Saved features/unknown fields, geometry and persistence are unchanged; cancellation never saves. Cache versions refreshed; no new main-interface panels.
+
+Verified: all root/test JS syntax, nine Node regression suites and `git diff --check`. Actual API tests cover drawing/move state cleanup and zero storage writes. Studio fixture tests cover drawer close and 3D/2D transitions with an unchanged saved document. Pre-change API/studio code fails the new regressions. Corrected the minimal test DOM's descendant-ID removal to match real element replacement; no browser verification is implied.
+
+Blocked/unverified: Chromium still fails to launch (`socket() failed: Operation not permitted`). No visual, real Safari/touch, signed-in garden/Supabase or saved-reload verification. Before merge, start an unsaved path/move in a disposable fixture, close editing or switch views, then ensure later taps cannot complete it and saved features remain intact.
+
+Next: authorized signed-in geometry comparison, Safari touch checks and existing row/group persistence audit. Keep the basic 2D plan and separate illustrative section views. No merge/deployment/schema changes.

@@ -15,7 +15,8 @@ function fixture(raw) {
   constructor() {this.children = []; this.style = {}; this.ids = []; this.value = '';}
   set innerHTML(html) {
    this.html = html;
-   this.ids.forEach(id => nodes.delete(id));
+   const remove=id=>{for(const child of nodes.get(id)?.ids||[])remove(child);nodes.delete(id);};
+   this.ids.forEach(remove);
    this.ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
    this.ids.forEach(id => nodes.set(id, new Element()));
   }

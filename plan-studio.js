@@ -12,10 +12,11 @@ const preview=document.createElement('section');preview.id='ps-preview';preview.
 const notice=document.createElement('p');notice.id='ps-notice';document.body.append(notice);
 const storageWarning=document.createElement('aside');storageWarning.id='ps-storage-warning';storageWarning.hidden=true;storageWarning.setAttribute('role','alert');storageWarning.innerHTML='<span>Proposed design could not be fully loaded. This view may be incomplete; saved data has not been changed. Open Edit plan for recovery details.</span><button id="ps-retry-plan">Retry loading</button>';document.body.append(storageWarning);
 $('ps-retry-plan').onclick=queue;
-const add=document.createElement('button');add.id='ps-add';add.textContent='+ Edit plan';add.onclick=()=>{const open=document.body.classList.toggle('ps-editing');add.textContent=open?'Done editing':'+ Edit plan';};document.body.append(add);
+const add=document.createElement('button');add.id='ps-add';add.textContent='+ Edit plan';add.onclick=()=>{if(document.body.classList.contains('ps-editing'))closeEditing();else{document.body.classList.add('ps-editing');add.textContent='Done editing';}};document.body.append(add);
 // Read once per render so a transient failure cannot become an empty success mid-frame.
 function readPlan(){try{planSnapshot=api().snapshot();storageWarning.hidden=true;}catch{planSnapshot=null;storageWarning.hidden=false;}}
 function plan(){return planSnapshot;}
+function closeEditing(){api().cancel();document.body.classList.remove('ps-editing');add.textContent='+ Edit plan';}
 function savedPlants(){return (window.gardenPlanPlants||[]).filter(p=>(p.status||'Existing').toLowerCase()!=='removed');}
 function missingLocations(){return savedPlants().filter(p=>!window.gardenDexCoordinates.toDisplay(p)).length;}
 function locationNotice(){const count=missingLocations();return count?` · ${count} saved plant record${count===1?' needs':'s need'} coordinates and ${count===1?'is':'are'} not shown.`:'';}
@@ -52,7 +53,7 @@ function queue(){if(pending)return;pending=true;requestAnimationFrame(refresh);}
 new MutationObserver(records=>{if(records.some(r=>!r.target.closest?.('#ps-symbols')&&[...r.addedNodes,...r.removedNodes].some(n=>n.id!=='ps-symbols')))queue();}).observe(map,{childList:true,subtree:true});
 function focusPlan(){api().focus(section);map.style.clipPath='none';map.querySelectorAll('.map-polygon').forEach(p=>{p.style.visibility='visible';});}
 function select(id){section=id;view='plan';$('ps-section').value=id;setView('plan');queue();}
-function setView(next){view=next;preview.hidden=next!=='3d';document.body.classList.toggle('ps-show-3d',next==='3d');$('ps-2d').setAttribute('aria-pressed',String(next==='plan'));$('ps-3d').setAttribute('aria-pressed',String(next==='3d'));add.hidden=next==='3d';if(next==='3d'){readPlan();flatten();draw3D();}else requestAnimationFrame(()=>{readPlan();focusPlan();flatten();});}
+function setView(next){view=next;preview.hidden=next!=='3d';document.body.classList.toggle('ps-show-3d',next==='3d');$('ps-2d').setAttribute('aria-pressed',String(next==='plan'));$('ps-3d').setAttribute('aria-pressed',String(next==='3d'));add.hidden=next==='3d';if(next==='3d'){closeEditing();readPlan();flatten();draw3D();}else requestAnimationFrame(()=>{readPlan();focusPlan();flatten();});}
 function toggleKey(){key.hidden=!key.hidden;$('ps-key').setAttribute('aria-expanded',String(!key.hidden));}
 $('ps-key').onclick=toggleKey;$('ps-section').onchange=e=>select(e.target.value);$('ps-2d').onclick=()=>setView('plan');$('ps-3d').onclick=()=>setView('3d');window.openGarden3D=id=>select(id);window.addEventListener('gardendex:planchange',queue);
 const guest=document.createElement('button');guest.id='ps-guest';guest.textContent='Open plan without signing in';guest.onclick=()=>{$('login-screen').classList.add('hidden');refresh();};document.querySelector('.login-card')?.append(guest);

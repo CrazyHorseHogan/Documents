@@ -19,7 +19,7 @@ assert.equal(f.values.get(guestKey),JSON.stringify(seed));assert.equal(f.writes,
 // Render the unmodified plan-studio script against the real editor API.
 const nodes=new Map(),callbacks=[],listeners=new Map();
 class Element{
- constructor(tag='div'){this.tagName=tag;this.attributes={};this.children=[];this.style={};this.dataset={};this.classList={add(){},toggle(){return false;}};}
+ constructor(tag='div'){this.tagName=tag;this.attributes={};this.children=[];this.style={};this.dataset={};const classes=new Set();this.classList={add:name=>classes.add(name),remove:name=>classes.delete(name),contains:name=>classes.has(name),toggle(name,force){const add=force??!classes.has(name);if(add)classes.add(name);else classes.delete(name);return add;}};}
  setAttribute(k,v){this.attributes[k]=String(v);if(k==='id'){this.id=String(v);nodes.set(this.id,this);}}
  getAttribute(k){return this.attributes[k];}
  append(child){child.parent=this;this.children.push(child);if(child.id)nodes.set(child.id,child);}
@@ -107,5 +107,18 @@ nodes.get('ps-3d').onclick();verifyProjection(renderedPositions());
 assert.equal(nodes.get('ps-storage-warning').hidden,true,'recovered section view stays complete');
 assert.equal(f.writes,writesBefore,'retries only read storage');
 assert.equal(f.values.get(guestKey),recoveredPlan,'all saved fields retained during retry');
+// Closing tools or switching views ends temporary placement without saving it.
+nodes.get('ps-2d').onclick();drain();
+const beforeClose=f.values.get(guestKey),beforeCloseWrites=f.writes;
+nodes.get('ps-add').onclick();assert(body.classList.contains('ps-editing'));
+f.api.start('path');assert(f.nodes.has('zd-finish'));
+nodes.get('ps-add').onclick();drain();
+assert(!body.classList.contains('ps-editing'));assert(!f.nodes.has('zd-finish'),'closing drawer ends drawing mode');
+assert.equal(nodes.get('ps-add').textContent,'+ Edit plan');
+nodes.get('ps-add').onclick();f.api.start('path');
+nodes.get('ps-3d').onclick();drain();
+assert(!body.classList.contains('ps-editing'));assert(!f.nodes.has('zd-finish'),'3D switch also ends drawing mode');
+nodes.get('ps-2d').onclick();drain();assert.equal(nodes.get('ps-add').textContent,'+ Edit plan');
+assert.equal(f.writes,beforeCloseWrites);assert.equal(f.values.get(guestKey),beforeClose);
 assert.equal(JSON.stringify({rows,saved}),originals,'existing plants and survey rows unchanged');
 console.log('Planting layout passed: grid/hedge geometry, invalid-data guards, matching 2D/projected positions, grouped labels, saved move, persistent storage-failure warnings, read-only recovery and unchanged source data.');
