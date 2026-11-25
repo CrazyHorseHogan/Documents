@@ -155,3 +155,15 @@ Verified: all root/test JS syntax, nine Node regression suites and `git diff --c
 Blocked/unverified: Chromium still fails to launch (`socket() failed: Operation not permitted`). No visual, real Safari/touch, signed-in garden/Supabase or saved-reload verification. Before merge, start an unsaved path/move in a disposable fixture, close editing or switch views, then ensure later taps cannot complete it and saved features remain intact.
 
 Next: authorized signed-in geometry comparison, Safari touch checks and existing row/group persistence audit. Keep the basic 2D plan and separate illustrative section views. No merge/deployment/schema changes.
+
+## 2026-11-25 — Preserve extra allowance fields during existing settings saves
+
+Inspected main `4f0c31a`, current notes/instructions and open PRs #2–#4; no applicable AGENTS.md in checkout/ancestors. Continued the unknown-field preservation audit in existing draft PR #4 (no review comments).
+
+An existing allowance form replaced its whole saved object with delivery/contingency values, dropping any other nested fields. It now retains the existing object before overriding those two edited values. This is a bounded data-preservation fix: no new budget UI, no changes to the main plan/section interface, coordinate transforms, stored measurements or schemas. Refreshed the editor script version.
+
+Verified: all root/test JS syntax, nine Node regression suites and `git diff --check`. Expanded the existing storage round-trip fixture with an extra nested allowance field; it survives the real form save, while the pre-change editor fails that assertion. Existing failed-read/write and owner-isolation checks pass. No live data accessed or changed.
+
+Blocked/unverified: local Chromium now exits 127 because `/usr/lib/chromium/chromium` is missing (rather than the earlier socket-permission failure). No browser/visual, signed-in garden/Supabase, phone/Safari or saved-reload verification. Before merge, use a disposable saved plan to verify extra fields survive the existing settings operation. Keep budget controls out of the main interface.
+
+Next: authorized signed-in geometry/plant comparison, Safari touch verification and existing row/group persistence audit. No merge/deployment/schema changes.
