@@ -167,3 +167,15 @@ Verified: all root/test JS syntax, nine Node regression suites and `git diff --c
 Blocked/unverified: local Chromium now exits 127 because `/usr/lib/chromium/chromium` is missing (rather than the earlier socket-permission failure). No browser/visual, signed-in garden/Supabase, phone/Safari or saved-reload verification. Before merge, use a disposable saved plan to verify extra fields survive the existing settings operation. Keep budget controls out of the main interface.
 
 Next: authorized signed-in geometry/plant comparison, Safari touch verification and existing row/group persistence audit. No merge/deployment/schema changes.
+
+## 2026-11-26 — Ignore superseded plant-load responses
+
+Inspected main `4f0c31a`, current notes/instructions and open PRs #2–#4; no applicable AGENTS.md in checkout/ancestors. Continued relevant map/data-reliability PR #4 (no review comments), without duplicating navigation or botanical-renderer work.
+
+Plant loads can overlap after garden loading and plant archive/restore actions. Added a request generation check so only the latest requested response can replace `gardenPlanPlants` or redraw markers. Older responses/errors are ignored, including an older populated result arriving after a newer empty result. Current request failures or non-array responses leave the existing displayed records/markers intact. No database writes, record changes, new fields, geometry changes or UI panels; app script version refreshed.
+
+Verified: all root/test JS syntax, ten Node regression suites and `git diff --check`. The new test executes the actual loadPlants function with controlled read-only Supabase promises: reversed and normal completion order, newer empty results, stale failures, failed/malformed latest responses and unchanged unknown fields. It fails against the prior loader because stale data replaces the newer response. No live network, credentials or records used in tests.
+
+Blocked/unverified: Chromium exits 127 because `/usr/lib/chromium/chromium` is missing; bundled Playwright Chromium is absent. No browser/visual, signed-in garden/Supabase, Safari/touch or real-network latency testing. Before merge, use a disposable fixture to delay overlapping reloads and verify the newest result remains visible. This request-order fix does not establish account-change/session isolation.
+
+Next: audit account-change load cleanup, authorized signed-in geometry comparison and existing row/group persistence. Keep the basic plan plus section illustrations; no dashboards, schemas, merge or deployment.

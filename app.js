@@ -2970,7 +2970,9 @@ addPlantForm.addEventListener(
    9. LOAD SAVED PLANTS
 ========================================= */
 
+let plantLoadVersion = 0;
 async function loadPlants() {
+    const version = ++plantLoadVersion;
 
     const { data, error } =
         await supabaseClient
@@ -2978,11 +2980,14 @@ async function loadPlants() {
             .select("*")
             .order("id", { ascending: true });
 
-    if (error) {
+    // An older request must not restore stale plants after a newer reload.
+    if (version !== plantLoadVersion) return;
+
+    if (error || !Array.isArray(data)) {
 
         console.error(
             "Plant load error:",
-            error
+            error || "Invalid plant response"
         );
 
         return;
