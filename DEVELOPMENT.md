@@ -179,3 +179,15 @@ Verified: all root/test JS syntax, ten Node regression suites and `git diff --ch
 Blocked/unverified: Chromium exits 127 because `/usr/lib/chromium/chromium` is missing; bundled Playwright Chromium is absent. No browser/visual, signed-in garden/Supabase, Safari/touch or real-network latency testing. Before merge, use a disposable fixture to delay overlapping reloads and verify the newest result remains visible. This request-order fix does not establish account-change/session isolation.
 
 Next: audit account-change load cleanup, authorized signed-in geometry comparison and existing row/group persistence. Keep the basic plan plus section illustrations; no dashboards, schemas, merge or deployment.
+
+## 2026-11-27 — Ignore superseded survey-load responses
+
+Inspected main `4f0c31a`, current notes/instructions and open PRs #2–#4; no applicable AGENTS.md in checkout/ancestors. Continued related request-order/geometry PR #4 (no review comments), without overlapping botanical or pointer-navigation work.
+
+Applied latest-request ordering to loadGarden: an old survey response can no longer replace newer geometry/status or start an extra plant load. Current failures/non-array results retain existing geometry and show the existing Connection error status. Genuine empty arrays still render an empty survey, without guessed data. All raw coordinates/unknown fields and database records remain unchanged; app script version refreshed. No new interface panels or schemas.
+
+Verified: all root/test JS syntax, eleven Node suites and `git diff --check`. A new test executes actual loadGarden against controlled read-only query promises, covering reverse/normal response order, stale failures, explicit current failures, malformed results, latest empty survey, plant-load triggering and unchanged records. The old loader fails the stale-geometry regression. These are synthetic async tests, not live database/browser checks.
+
+Blocked/unverified: system Chromium binary and bundled Playwright Chromium are both absent (checked this run). No visual, signed-in garden/Supabase, real Safari/touch, network latency or saved-reload verification. Use disposable latency-controlled fixtures before merge. Request ordering alone does not establish account-change/session isolation.
+
+Next: account-change load cleanup, authorized signed-in comparison against actual stored measurements and existing row/group persistence. Keep the basic 2D plan and separate illustrative section views; no dashboards, data/schema writes, merge or deployment.

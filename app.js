@@ -56,7 +56,9 @@ const closePanel =
    3. LOAD GARDEN FROM SUPABASE
 ========================================= */
 
+let gardenLoadVersion = 0;
 async function loadGarden() {
+    const version = ++gardenLoadVersion;
 
     connectionStatus.textContent =
         "Loading garden...";
@@ -77,11 +79,14 @@ async function loadGarden() {
             );
 
 
-    if (error) {
+    // Only the latest requested survey may change geometry, status or plant loads.
+    if (version !== gardenLoadVersion) return;
+
+    if (error || !Array.isArray(data)) {
 
         console.error(
             "Supabase error:",
-            error
+            error || "Invalid survey response"
         );
 
 
