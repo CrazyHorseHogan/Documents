@@ -15,7 +15,8 @@ function fixture(raw) {
   constructor() {this.children = []; this.style = {}; this.ids = []; this.value = '';}
   set innerHTML(html) {
    this.html = html;
-   this.ids.forEach(id => nodes.delete(id));
+   const remove=id=>{for(const child of nodes.get(id)?.ids||[])remove(child);nodes.delete(id);};
+   this.ids.forEach(remove);
    this.ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
    this.ids.forEach(id => nodes.set(id, new Element()));
   }
@@ -54,14 +55,14 @@ function fixture(raw) {
 }
 module.exports={fixture,guestKey};
 if(require.main===module)(async()=>{
- const existing={features:[{id:'existing-plant',type:'plant',zone:'ChildrenGarden',name:'Test planting',points:[{x:120,y:140}],species:'fern',count:1,spacing:0.6,price:null,labour:null}],conditions:{ChildrenGarden:{light:'shade'}},allowances:{delivery:4},futureField:{keep:true}};
+ const existing={features:[{id:'existing-plant',type:'plant',zone:'ChildrenGarden',name:'Test planting',points:[{x:120,y:140}],species:'fern',count:1,spacing:0.6,price:null,labour:null}],conditions:{ChildrenGarden:{light:'shade'}},allowances:{delivery:4,unknownAllowance:{source:'fixture',keep:true}},futureField:{keep:true}};
  // Valid plans round-trip without dropping site conditions or unknown fields.
  let f=fixture(JSON.stringify(existing)); f.open(); f.save();
  const saved=JSON.parse(f.values.get(guestKey));
  assert.deepEqual(saved.features,existing.features);
  assert.deepEqual(saved.conditions,existing.conditions);
  assert.deepEqual(saved.futureField,existing.futureField);
- assert.deepEqual(saved.allowances,{delivery:12,contingency:5});
+ assert.deepEqual(saved.allowances,{delivery:12,contingency:5,unknownAllowance:existing.allowances.unknownAllowance},'editing known values preserves unknown nested allowance fields');
  f.nodes.get('zd-export').onclick();
  assert.equal(JSON.parse(await f.downloads[0].text()).allowances.delivery,12);
  // Empty storage is a new plan; deliberately empty strings are damaged records.

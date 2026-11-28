@@ -56,7 +56,9 @@ const closePanel =
    3. LOAD GARDEN FROM SUPABASE
 ========================================= */
 
+let gardenLoadVersion = 0;
 async function loadGarden() {
+    const version = ++gardenLoadVersion;
 
     connectionStatus.textContent =
         "Loading garden...";
@@ -77,11 +79,14 @@ async function loadGarden() {
             );
 
 
-    if (error) {
+    // Only the latest requested survey may change geometry, status or plant loads.
+    if (version !== gardenLoadVersion) return;
+
+    if (error || !Array.isArray(data)) {
 
         console.error(
             "Supabase error:",
-            error
+            error || "Invalid survey response"
         );
 
 
@@ -118,54 +123,12 @@ function drawGarden(rows) {
     window.gardenSurveyRows = rows;
 
 
-    /*
-       Supabase gives us rows like:
-
-       BigGarden | 1 | D | 920 | 400
-       BigGarden | 2 | E | 1060 | 0
-
-       We first group those rows
-       by polygon name.
-    */
-
-
-    const polygons = {};
-
-
-    rows.forEach(row => {
-
-
-        if (!polygons[row.polygon]) {
-
-            polygons[row.polygon] = [];
-
-        }
-
-
-        polygons[row.polygon].push({
-
-            pointName:
-                row.geogebra_point,
-
-            order:
-                Number(row.point_order),
-
-            x:
-                Number(row.x_cm),
-
-            y:
-                Number(row.y_cm)
-
-        });
-
-    });
-
-
-    console.log(
-        "Grouped polygons:",
-        polygons
-    );
-
+    // Keep the original survey rows intact. Only complete supplied boundaries render.
+    const survey = window.gardenDexCoordinates.survey(rows);
+    const polygons = survey.sections;
+    if (survey.invalidSections.length || survey.unassignedRows) {
+        connectionStatus.textContent = 'Some survey data is incomplete; affected outlines are not shown.';
+    }
 
     /*
        Clear map before drawing.
@@ -3012,7 +2975,9 @@ addPlantForm.addEventListener(
    9. LOAD SAVED PLANTS
 ========================================= */
 
+let plantLoadVersion = 0;
 async function loadPlants() {
+    const version = ++plantLoadVersion;
 
     const { data, error } =
         await supabaseClient
@@ -3020,11 +2985,14 @@ async function loadPlants() {
             .select("*")
             .order("id", { ascending: true });
 
-    if (error) {
+    // An older request must not restore stale plants after a newer reload.
+    if (version !== plantLoadVersion) return;
+
+    if (error || !Array.isArray(data)) {
 
         console.error(
             "Plant load error:",
-            error
+            error || "Invalid plant response"
         );
 
         return;
@@ -3128,11 +3096,10 @@ function drawPlantMarker(plant) {
        as the garden polygons.
     */
 
-    const displayX =
-        Number(plant.x_cm);
-
-    const displayY =
-        7000 - Number(plant.y_cm);
+    const position = window.gardenDexCoordinates.toDisplay(plant);
+    if (!position) return; // Keep the record; do not guess a display location.
+    const displayX = position.x;
+    const displayY = position.y;
 
 
     const marker =
@@ -3479,12 +3446,15 @@ const loginMessage =
 
 
 async function checkLogin() {
+    const version = gardenLoadVersion;
 
     const {
         data: { session }
     } =
         await supabaseClient.auth.getSession();
 
+
+    if (version !== gardenLoadVersion) return;
 
     if (session) {
 
@@ -3660,6 +3630,27 @@ document
         );
 
     });
+// Session changes invalidate pending remote reads, never persisted garden records.
+let gardenSessionOwner;
+function handleGardenSession(_event,session){
+ const next=session?.user?.id||null;
+ // The startup check already loads an initial signed-in session.
+ if(gardenSessionOwner===undefined&&next!==null){gardenSessionOwner=next;return;}
+ if(next===gardenSessionOwner)return;
+ gardenSessionOwner=next;
+ gardenLoadVersion++;plantLoadVersion++;
+ cancelPlantPlacement();
+ window.gardenDexZoneDesigner?.cancel();
+ window.gardenSurveyRows=[];window.gardenPlanPlants=[];
+ gardenMap.replaceChildren();
+ plantPanel.classList.add('hidden');
+ loginScreen.classList.toggle('hidden',next!==null);
+ connectionStatus.textContent=next?'Loading garden...':'Sign in required';
+ window.dispatchEvent(new Event('gardendex:planchange'));
+ // Do not run Supabase queries inside its synchronous auth callback.
+ if(next!==null)setTimeout(()=>{if(gardenSessionOwner===next)return loadGarden();},0);
+}
+supabaseClient.auth.onAuthStateChange(handleGardenSession);
 checkLogin();
 /* =========================
    HOUSE INTERIOR
