@@ -191,3 +191,15 @@ Verified: all root/test JS syntax, eleven Node suites and `git diff --check`. A 
 Blocked/unverified: system Chromium binary and bundled Playwright Chromium are both absent (checked this run). No visual, signed-in garden/Supabase, real Safari/touch, network latency or saved-reload verification. Use disposable latency-controlled fixtures before merge. Request ordering alone does not establish account-change/session isolation.
 
 Next: account-change load cleanup, authorized signed-in comparison against actual stored measurements and existing row/group persistence. Keep the basic 2D plan and separate illustrative section views; no dashboards, data/schema writes, merge or deployment.
+
+## 2026-11-28 — Invalidate remote map loads on session changes
+
+Inspected main `4f0c31a`, current notes/instructions and open PRs #2–#4; no applicable AGENTS.md in checkout/ancestors. Continued related asynchronous-load reliability work in draft PR #4 (no review comments), separate from navigation and botanical prototyping.
+
+Added an app auth-state handler: sign-out/account changes invalidate pending survey and plant read generations, cancel transient placement, clear only in-memory remote rows/markers, hide the plant profile and notify the active studio to refresh. Signed-out UI shows Sign in required. A different signed-in owner schedules its new survey read after the auth callback, with a guard against another session change before that task runs. Initial signed-in startup keeps the existing checkLogin load; same-owner refreshes do not clear/reload. A startup getSession result is ignored if the garden generation changed while it was pending. No database/localStorage deletion or mutation, new schemas, measurements or UI panels; app cache version refreshed.
+
+Verified: all root/test JS syntax, twelve Node suites and `git diff --check`. New synthetic tests execute actual auth/startup handlers and loaders with deferred read-only promises: delayed old-session results, transient cleanup, token refresh, account switching, deferred-reload cancellation and stale startup rejection. Original records/unknown fields remain unchanged. Baseline lacks the cleanup handler and fails the regression. This is scoped to in-memory remote reads/display; it is not a complete authentication/authorization audit.
+
+Blocked/unverified: system and bundled Playwright Chromium binaries remain absent. No browser/visual, actual sign-in/account switch, live Supabase/RLS, Safari/touch or persistent reload verification. Before merge, use disposable accounts/fixtures to sign out/switch during delayed reads and check both views, with local saved designs retained. Do not modify production records merely to test.
+
+Next: review remaining sign-in/form and owner-local workspace transitions, authorized geometry comparison and existing row/group persistence. Keep the basic plan/section interface. No merge/deployment/data/schema writes.

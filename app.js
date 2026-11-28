@@ -3446,12 +3446,15 @@ const loginMessage =
 
 
 async function checkLogin() {
+    const version = gardenLoadVersion;
 
     const {
         data: { session }
     } =
         await supabaseClient.auth.getSession();
 
+
+    if (version !== gardenLoadVersion) return;
 
     if (session) {
 
@@ -3627,6 +3630,27 @@ document
         );
 
     });
+// Session changes invalidate pending remote reads, never persisted garden records.
+let gardenSessionOwner;
+function handleGardenSession(_event,session){
+ const next=session?.user?.id||null;
+ // The startup check already loads an initial signed-in session.
+ if(gardenSessionOwner===undefined&&next!==null){gardenSessionOwner=next;return;}
+ if(next===gardenSessionOwner)return;
+ gardenSessionOwner=next;
+ gardenLoadVersion++;plantLoadVersion++;
+ cancelPlantPlacement();
+ window.gardenDexZoneDesigner?.cancel();
+ window.gardenSurveyRows=[];window.gardenPlanPlants=[];
+ gardenMap.replaceChildren();
+ plantPanel.classList.add('hidden');
+ loginScreen.classList.toggle('hidden',next!==null);
+ connectionStatus.textContent=next?'Loading garden...':'Sign in required';
+ window.dispatchEvent(new Event('gardendex:planchange'));
+ // Do not run Supabase queries inside its synchronous auth callback.
+ if(next!==null)setTimeout(()=>{if(gardenSessionOwner===next)return loadGarden();},0);
+}
+supabaseClient.auth.onAuthStateChange(handleGardenSession);
 checkLogin();
 /* =========================
    HOUSE INTERIOR
